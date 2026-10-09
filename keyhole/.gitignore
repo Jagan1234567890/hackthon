@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# runtime data (SQLite-backed JSON stores – change at runtime, not source code)
+.data/
