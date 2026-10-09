@@ -120,6 +120,18 @@ body {
   box-shadow: 0 4px 32px oklch(0 0 0 / 0.4), inset 0 1px 0 oklch(1 0 0 / 0.04);
 }
 .logo { display: flex; align-items: center; gap: 0.55rem; flex-shrink: 0; }
+.logo-img {
+  width: 30px; height: 30px; border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 0 16px var(--accent-glow);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.logo-img:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 24px var(--accent-glow);
+}
 .logo-spark {
   width: 30px; height: 30px; border-radius: 8px;
   background: linear-gradient(135deg, var(--accent-hi), var(--accent-lo));

@@ -69,4 +69,4 @@ assert len(history) >= 1
 
 print()
 print("=" * 60)
-print("ALL TESTS PASSED ✓")
+print("ALL TESTS PASSED [OK]")

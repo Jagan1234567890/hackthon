@@ -10,7 +10,27 @@ const state = {
   verify: { file: null },
   tamper: { file: null },
   detect: { file: null },
+  batch:  { files: [] },
 };
+
+// ── Client-side validation constants ──────────────────────
+const MAX_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
+const ALLOWED_TYPES  = [
+  'image/jpeg','image/png','image/webp','image/gif','image/bmp','image/tiff',
+  'video/mp4','video/quicktime','video/x-msvideo','video/webm',
+  'audio/mpeg','audio/wav','audio/ogg',
+  'application/pdf','application/octet-stream',
+];
+
+function validateFile(file) {
+  if (file.size > MAX_SIZE_BYTES) {
+    return `File "${file.name}" is ${formatBytes(file.size)} — exceeds the 50 MB limit.`;
+  }
+  if (file.type && !ALLOWED_TYPES.includes(file.type)) {
+    return `File type "${file.type}" is not supported. Use images, video, audio, or PDF.`;
+  }
+  return null; // valid
+}
 
 // ── Telemetry counters ─────────────────────────────────────
 const telemetry = { signed: 0, verified: 0 };
@@ -24,6 +44,8 @@ function incTelemetry(key) {
 document.addEventListener('DOMContentLoaded', () => {
   checkServerHealth();
   setInterval(checkServerHealth, 10000);
+  loadStats();
+  setInterval(loadStats, 30000);
 });
 
 // ── Server health ──────────────────────────────────────────
@@ -41,6 +63,26 @@ async function checkServerHealth() {
   } catch {
     dot.className  = 'status-dot offline';
     text.textContent = 'Backend Offline';
+  }
+}
+
+// ── Live stats ─────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const res  = await fetch(`${API}/stats`, { signal: AbortSignal.timeout(4000) });
+    if (!res.ok) return;
+    const s = await res.json();
+
+    const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    setEl('stat-signed',    s.total_signed);
+    setEl('stat-verified',  s.total_verified);
+    setEl('stat-authentic', s.authentic_count);
+    setEl('stat-ai',        s.ai_count);
+    setEl('stat-tampered',  s.tampered_count);
+    setEl('stat-reupload',  s.re_upload_count);
+    setEl('stat-viewed',    s.viewed_count);
+  } catch {
+    // Silently ignore — stats are non-critical
   }
 }
 
@@ -68,8 +110,14 @@ function handleDragOver(e) {
 function handleDrop(e, mode) {
   e.preventDefault();
   e.currentTarget.classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
-  if (file) attachFile(mode, file);
+  if (mode === 'batch') {
+    // Multi-file drop for batch panel
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length) attachBatchFiles(files);
+  } else {
+    const file = e.dataTransfer.files[0];
+    if (file) attachFile(mode, file);
+  }
 }
 
 function handleFileSelect(e, mode) {
@@ -125,6 +173,14 @@ async function signFile() {
   const btn = document.getElementById('signBtn');
   const resultEl = document.getElementById('signResult');
 
+  // Client-side validation
+  const validationErr = validateFile(file);
+  if (validationErr) {
+    resultEl.classList.remove('hidden');
+    resultEl.innerHTML = errorCard('Invalid File', validationErr);
+    return;
+  }
+
   setLoading(btn, '🔏', 'Signing…');
 
   try {
@@ -137,32 +193,49 @@ async function signFile() {
     const data = await res.json();
 
     resultEl.classList.remove('hidden');
+    if (!res.ok) {
+      // Surface HTTP-level errors (413 size, 415 MIME) cleanly
+      resultEl.innerHTML = errorCard(
+        `Upload Error (HTTP ${res.status})`,
+        data.detail || JSON.stringify(data)
+      );
+      return;
+    }
     if (data.status === 'signed' || data.status === 'already_signed') {
       incTelemetry('signed');
+      loadStats(); // refresh dashboard counters
       const m = data.manifest;
       const isNew = data.status === 'signed';
+
+      // For re-uploads, find the latest RE_UPLOADED event for the badge
+      const latestEvent = !isNew && data.custody_chain
+        ? data.custody_chain.filter(e => e.action === 'RE_UPLOADED').pop()
+        : null;
+
       resultEl.innerHTML = `
         <div class="verdict-card signed">
           <div class="verdict-header">
             <div class="verdict-emoji">${isNew ? '🔏' : '♻️'}</div>
             <div>
               <div class="verdict-title" style="color:var(--accent-hi)">
-                ${isNew ? 'Signed & Secured' : 'Already Signed'}
+                ${isNew ? 'Signed & Secured' : 'Already Signed — Activity Logged'}
               </div>
               <div class="verdict-subtitle">
-                ${isNew ? 'Ed25519 signature created and stored' : 'This exact file was signed previously'}
+                ${isNew
+                  ? 'Ed25519 signature created and stored'
+                  : 'RE_UPLOADED event appended to chain of custody'}
               </div>
             </div>
           </div>
           <p class="verdict-message">
             ${isNew
               ? 'Your file now has a cryptographic fingerprint. Anyone who verifies this exact file against our system will receive a green "Authentic" badge. Any modification — even a single pixel — will cause verification to fail.'
-              : 'An identical file was already in our system. The existing manifest has been returned.'}
+              : `An identical file was already in our system. A <strong>RE_UPLOADED</strong> event has been appended to its chain of custody at <em>${latestEvent ? formatDate(latestEvent.timestamp) : 'now'}</em>. The original manifest is returned below.`}
           </p>
           <div class="hash-display" title="SHA-256 fingerprint of your file">
             SHA-256: ${m.file_hash}
           </div>
-          <details class="manifest-details">
+          <details class="manifest-details" ${!isNew ? 'open' : ''}>
             <summary>📄 View Full Manifest</summary>
             <table class="manifest-table">
               <tr><td>File</td><td>${escHtml(m.original_filename || m.filename)}</td></tr>
@@ -174,6 +247,7 @@ async function signFile() {
               <tr><td>Signature</td><td>${truncate(m.signature, 32)}…</td></tr>
               ${m.note ? `<tr><td>Note</td><td>${escHtml(m.note)}</td></tr>` : ''}
             </table>
+            ${renderChain(data.custody_chain)}
           </details>
         </div>`;
     } else {
@@ -195,6 +269,13 @@ async function verifyFile() {
   const btn = document.getElementById('verifyBtn');
   const resultEl = document.getElementById('verifyResult');
 
+  const validationErr = validateFile(file);
+  if (validationErr) {
+    resultEl.classList.remove('hidden');
+    resultEl.innerHTML = errorCard('Invalid File', validationErr);
+    return;
+  }
+
   setLoading(btn, '🔍', 'Verifying…');
 
   try {
@@ -213,6 +294,158 @@ async function verifyFile() {
   } finally {
     resetLoading(btn, '🔍', 'Verify File');
   }
+}
+
+// ── BATCH VERIFY ──────────────────────────────────────────
+function handleBatchFileSelect(e) {
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+  attachBatchFiles(files);
+}
+
+function attachBatchFiles(files) {
+  state.batch.files = files;
+  const listEl = document.getElementById('batchFileList');
+  const btn    = document.getElementById('batchBtn');
+  const validCount = files.filter(f => !validateFile(f)).length;
+
+  if (listEl) {
+    listEl.innerHTML = files.map((f) => {
+      const err = validateFile(f);
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;
+                    padding:.35rem .5rem;border-bottom:1px solid var(--border);font-size:.8rem;">
+          <span style="${err ? 'color:var(--red-light)' : 'color:var(--text-primary)'}">
+            ${err ? '⚠️ ' : '📄 '}${escHtml(f.name)}
+          </span>
+          <span style="color:var(--text-dim);font-size:.75rem;">
+            ${err ? escHtml(err) : formatBytes(f.size)}
+          </span>
+        </div>`;
+    }).join('');
+
+    // Show a summary warning if some files are invalid
+    if (validCount < files.length) {
+      listEl.insertAdjacentHTML('afterbegin', `
+        <div style="padding:.4rem .6rem;background:rgba(251,191,36,.08);
+                    border-bottom:1px solid rgba(251,191,36,.25);font-size:.78rem;
+                    color:var(--amber-light);">
+          ⚠️ ${files.length - validCount} file(s) will be skipped (invalid type or size).
+          ${validCount} valid file(s) will be submitted.
+        </div>`);
+    }
+  }
+  if (btn) btn.disabled = validCount === 0;
+}
+
+async function batchVerify() {
+  const allFiles = state.batch.files;
+  if (!allFiles.length) return;
+
+  // Filter out client-side invalid files before submission
+  const files = allFiles.filter(f => !validateFile(f));
+  if (!files.length) {
+    const resultEl = document.getElementById('batchResult');
+    resultEl.classList.remove('hidden');
+    resultEl.innerHTML = errorCard('No Valid Files', 'All selected files failed client-side validation. Check file types and sizes.');
+    return;
+  }
+
+  const btn      = document.getElementById('batchBtn');
+  const resultEl = document.getElementById('batchResult');
+  setLoading(btn, '📦', `Verifying ${files.length} file${files.length > 1 ? 's' : ''}…`);
+
+  try {
+    const fd = new FormData();
+    for (const f of files) fd.append('files', f);
+
+    const res  = await fetch(`${API}/batch-verify`, { method: 'POST', body: fd });
+    const data = await res.json();
+
+    if (!res.ok) {
+      resultEl.classList.remove('hidden');
+      resultEl.innerHTML = errorCard(`Server Error ${res.status}`, data.detail || JSON.stringify(data));
+      return;
+    }
+
+    resultEl.classList.remove('hidden');
+    resultEl.innerHTML = renderBatchResults(data);
+    // Refresh stats after batch op
+    loadStats();
+  } catch (err) {
+    resultEl.classList.remove('hidden');
+    resultEl.innerHTML = errorCard('Network Error', err.message);
+  } finally {
+    resetLoading(btn, '📦', 'Batch Verify');
+  }
+}
+
+function renderBatchResults(data) {
+  const { summary, results, total } = data;
+  const summaryHtml = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:1.25rem;">
+      <div style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);border-radius:10px;
+                  padding:.75rem;text-align:center;">
+        <div style="font-size:1.6rem;font-weight:800;color:var(--emerald-light)">${summary.authentic}</div>
+        <div style="font-size:.7rem;color:var(--text-dim);margin-top:.2rem;">Authentic</div>
+      </div>
+      <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:10px;
+                  padding:.75rem;text-align:center;">
+        <div style="font-size:1.6rem;font-weight:800;color:var(--red-light)">${summary.tampered}</div>
+        <div style="font-size:.7rem;color:var(--text-dim);margin-top:.2rem;">Tampered</div>
+      </div>
+      <div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25);border-radius:10px;
+                  padding:.75rem;text-align:center;">
+        <div style="font-size:1.6rem;font-weight:800;color:var(--purple)">${summary.ai_checked}</div>
+        <div style="font-size:.7rem;color:var(--text-dim);margin-top:.2rem;">AI Checked</div>
+      </div>
+      <div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:10px;
+                  padding:.75rem;text-align:center;">
+        <div style="font-size:1.6rem;font-weight:800;color:var(--amber-light)">${summary.errors}</div>
+        <div style="font-size:.7rem;color:var(--text-dim);margin-top:.2rem;">Errors</div>
+      </div>
+    </div>`;
+
+  const rows = results.map(r => {
+    let icon, color, label;
+    if (r.verdict === 'AUTHENTIC')             { icon='✅'; color='var(--emerald-light)'; label='Authentic'; }
+    else if (r.verdict === 'SIGNATURE_BROKEN') { icon='💔'; color='var(--red-light)';    label='Sig Broken'; }
+    else if (r.verdict === 'AI_DETECTION_FALLBACK') { icon='🤖'; color='var(--purple)'; label='AI Checked'; }
+    else if (r.status === 'rejected')          { icon='⛔'; color='var(--amber-light)';  label='Rejected'; }
+    else                                       { icon='❓'; color='var(--text-dim)';      label=r.status || '?'; }
+
+    const conf = r.detection?.confidence != null
+      ? ` <span style="color:var(--text-dim);font-size:.75rem;">· AI ${r.detection.confidence.toFixed(0)}%</span>`
+      : '';
+
+    return `
+      <div style="display:flex;align-items:center;gap:.75rem;padding:.5rem .25rem;
+                  border-bottom:1px solid var(--border);">
+        <span style="width:2rem;text-align:center;font-size:1.1rem;">${icon}</span>
+        <span style="flex:1;font-size:.82rem;color:var(--text-primary);word-break:break-all;">
+          ${escHtml(r.filename)}
+        </span>
+        <span style="font-size:.78rem;font-weight:700;color:${color};white-space:nowrap;">
+          ${label}${conf}
+        </span>
+        ${r.error ? `<span style="font-size:.72rem;color:var(--red-light);" title="${escHtml(r.error)}">⚠</span>` : ''}
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="verdict-card" style="border-color:var(--border);">
+      <div class="verdict-header" style="margin-bottom:1rem;">
+        <div class="verdict-emoji">📦</div>
+        <div>
+          <div class="verdict-title" style="color:var(--indigo-light);">Batch Verification Complete</div>
+          <div class="verdict-subtitle">${total} file${total !== 1 ? 's' : ''} processed</div>
+        </div>
+      </div>
+      ${summaryHtml}
+      <div style="font-size:.75rem;font-weight:700;color:var(--text-dim);margin-bottom:.5rem;
+                  text-transform:uppercase;letter-spacing:.05em;">Results</div>
+      ${rows}
+    </div>`;
 }
 
 function renderVerifyResult(data) {
@@ -560,14 +793,29 @@ async function loadChain(manifestId) {
 
 function renderChain(chain) {
   if (!chain || !chain.length) return '';
+
+  const ACTION_META = {
+    SIGNED:      { icon: '🔏', color: 'var(--indigo-light)',  label: 'SIGNED' },
+    RE_UPLOADED: { icon: '♻️', color: 'var(--amber-light)',  label: 'RE-UPLOADED' },
+    VIEWED:      { icon: '👁️', color: 'var(--emerald-light)', label: 'VIEWED' },
+    TRANSFERRED: { icon: '🔀', color: 'var(--purple)',         label: 'TRANSFERRED' },
+  };
+
   return `
     <div style="margin-top:.75rem;">
-      <div style="font-size:.75rem;font-weight:700;color:var(--text-dim);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.05em;">Chain of Custody</div>
-      ${chain.map(ev => `
-        <div style="display:flex;gap:.6rem;align-items:flex-start;padding:.4rem 0;border-bottom:1px solid var(--border);font-size:.78rem;">
-          <span style="color:var(--indigo-light);font-weight:700;">${escHtml(ev.action)}</span>
-          <span style="color:var(--text-dim);">· ${escHtml(ev.actor)} · ${formatDate(ev.timestamp)}</span>
-        </div>`).join('')}
+      <div style="font-size:.75rem;font-weight:700;color:var(--text-dim);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.05em;">Chain of Custody (${chain.length} event${chain.length !== 1 ? 's' : ''})</div>
+      ${chain.map(ev => {
+        const meta = ACTION_META[ev.action] || { icon: '📋', color: 'var(--text-dim)', label: ev.action };
+        return `
+          <div style="display:flex;gap:.6rem;align-items:flex-start;padding:.4rem 0;border-bottom:1px solid var(--border);font-size:.78rem;">
+            <span style="font-size:.9rem;min-width:1.2rem;">${meta.icon}</span>
+            <span style="color:${meta.color};font-weight:700;white-space:nowrap;">${meta.label}</span>
+            <span style="color:var(--text-dim);">
+              · ${escHtml(ev.actor)} · ${formatDate(ev.timestamp)}
+              ${ev.note ? `<br><em style="color:var(--text-dim);font-size:.74rem;">${escHtml(ev.note)}</em>` : ''}
+            </span>
+          </div>`;
+      }).join('')}
     </div>`;
 }
 

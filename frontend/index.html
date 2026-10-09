@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TrustMark — Provenance & Detection System</title>
   <meta name="description" content="A hybrid digital trust system that cryptographically signs content at capture time and uses AI to analyse anything unsigned." />
+  <link rel="icon" type="image/jpeg" href="trustmark_badge.jpg" />
+  <meta property="og:title" content="TrustMark — Digital Trust System" />
+  <meta property="og:description" content="Cryptographic provenance + AI deepfake detection. Ed25519 signing, SHA-256 hashing, chain of custody." />
+  <meta property="og:image" content="trustmark_splash.jpg" />
+  <meta property="og:type" content="website" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -29,7 +34,14 @@
   <header class="header">
     <div class="header-pill">
       <div class="logo">
-        <div class="logo-spark" aria-hidden="true">🔐</div>
+        <img
+          src="trustmark_badge.jpg"
+          alt="TrustMark Verified badge"
+          class="logo-img"
+          width="36" height="36"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+        />
+        <div class="logo-spark" aria-hidden="true" style="display:none">🔐</div>
         <span class="logo-text">TrustMark</span>
         <span class="logo-badge">BETA</span>
       </div>
@@ -37,6 +49,7 @@
       <nav class="nav" role="navigation" aria-label="Main navigation">
         <button class="nav-tab active" id="tab-sign"    onclick="switchTab('sign')"    aria-selected="true">Sign</button>
         <button class="nav-tab"        id="tab-verify"  onclick="switchTab('verify')"  aria-selected="false">Verify</button>
+        <button class="nav-tab"        id="tab-batch"   onclick="switchTab('batch')"   aria-selected="false">Batch Verify</button>
         <button class="nav-tab"        id="tab-tamper"  onclick="switchTab('tamper')"  aria-selected="false">Tamper Demo</button>
         <button class="nav-tab"        id="tab-detect"  onclick="switchTab('detect')"  aria-selected="false">AI Detect</button>
         <button class="nav-tab"        id="tab-history" onclick="switchTab('history')" aria-selected="false">History</button>
@@ -92,23 +105,38 @@
     <!-- ═══════════ TELEMETRY ═══════════ -->
     <div class="telemetry-bar" aria-label="Live system telemetry">
       <div class="telemetry-item">
-        <span>UPTIME</span>
-        <span class="telemetry-val green" id="tel-uptime">99.98%</span>
-      </div>
-      <span class="telemetry-sep">|</span>
-      <div class="telemetry-item">
-        <span>LATENCY</span>
-        <span class="telemetry-val accent" id="tel-latency">&lt;14ms</span>
-      </div>
-      <span class="telemetry-sep">|</span>
-      <div class="telemetry-item">
         <span>SIGNED</span>
-        <span class="telemetry-val" id="tel-signed">0</span>
+        <span class="telemetry-val green" id="stat-signed">—</span>
       </div>
       <span class="telemetry-sep">|</span>
       <div class="telemetry-item">
         <span>VERIFIED</span>
-        <span class="telemetry-val" id="tel-verified">0</span>
+        <span class="telemetry-val accent" id="stat-verified">—</span>
+      </div>
+      <span class="telemetry-sep">|</span>
+      <div class="telemetry-item">
+        <span>AUTHENTIC</span>
+        <span class="telemetry-val green" id="stat-authentic">—</span>
+      </div>
+      <span class="telemetry-sep">|</span>
+      <div class="telemetry-item">
+        <span>AI CHECKED</span>
+        <span class="telemetry-val" id="stat-ai">—</span>
+      </div>
+      <span class="telemetry-sep">|</span>
+      <div class="telemetry-item">
+        <span>TAMPERED</span>
+        <span class="telemetry-val" style="color:var(--red-light)" id="stat-tampered">—</span>
+      </div>
+      <span class="telemetry-sep">|</span>
+      <div class="telemetry-item">
+        <span>RE-UPLOADS</span>
+        <span class="telemetry-val" id="stat-reupload">—</span>
+      </div>
+      <span class="telemetry-sep">|</span>
+      <div class="telemetry-item">
+        <span>VIEWS</span>
+        <span class="telemetry-val" id="stat-viewed">—</span>
       </div>
       <span class="telemetry-sep">|</span>
       <div class="telemetry-item">
@@ -329,6 +357,54 @@
 
         <div id="detectPreview" class="file-preview hidden" aria-live="polite"></div>
         <div id="detectResult" class="result-area hidden" aria-live="polite"></div>
+      </section>
+
+      <!-- BATCH VERIFY -->
+      <section class="panel" id="panel-batch" aria-labelledby="tab-batch">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <span class="panel-icon">📦</span> Batch Verify
+          </h2>
+          <p class="panel-desc">
+            Verify up to <strong>20 files at once</strong>. Each file is independently
+            checked against the manifest store — authentic files get cryptographic proof,
+            unsigned files get AI analysis. Results are shown in a unified summary.
+          </p>
+          <div class="info-banner">
+            <span class="info-icon">ℹ️</span>
+            <span>Max <strong>20 files · 50 MB each</strong>. Accepted types: images, video (MP4/MOV/AVI/WebM), audio, PDF.</span>
+          </div>
+        </div>
+
+        <div class="upload-area" id="batchDrop" role="button" tabindex="0"
+             aria-label="Drop zone for batch verification"
+             ondragover="handleDragOver(event)"
+             ondrop="(function(e){e.preventDefault();e.currentTarget.classList.remove('drag-over');const files=Array.from(e.dataTransfer.files);if(files.length){state.batch.files=files;handleBatchFileSelect({target:{files:e.dataTransfer.files}})};})(event)"
+             onclick="document.getElementById('batchInput').click()"
+             onkeydown="if(event.key==='Enter')document.getElementById('batchInput').click()">
+          <div class="upload-icon" aria-hidden="true">📦</div>
+          <div class="upload-text">Drop multiple files here</div>
+          <div class="upload-hint">or click to browse — select up to 20 files</div>
+          <input type="file" id="batchInput" multiple
+                 accept="image/*,video/*,audio/*,application/pdf"
+                 style="display:none"
+                 onchange="handleBatchFileSelect(event)"
+                 aria-label="Select files for batch verification" />
+        </div>
+
+        <!-- Selected file list -->
+        <div id="batchFileList"
+             style="background:rgba(255,255,255,.03);border:1px solid var(--border);
+                    border-radius:10px;margin:.75rem 0;max-height:220px;overflow-y:auto;
+                    font-size:.8rem;">
+        </div>
+
+        <button class="btn btn-secondary" id="batchBtn" onclick="batchVerify()" disabled
+                aria-label="Run batch verification">
+          <span class="btn-icon">📦</span> Batch Verify
+        </button>
+
+        <div id="batchResult" class="result-area hidden" aria-live="polite"></div>
       </section>
 
       <!-- HISTORY -->
