@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "file_hash": "1bad0145700a2fa5069818f145340274dd21430a21be821266afbc548acf1b2a",
+  "hash_algorithm": "SHA-256",
+  "original_filename": "PersonDoesNotExistAI.jpg",
+  "timestamp": "2026-10-09T06:26:16.545698+00:00",
+  "device_id": "web-upload",
+  "public_key": "7480a60f16a80c0926cb88226ebef4426bdc02daf77f1eeb915a14acf9aa985e",
+  "note": "",
+  "signature": "d61sVUzE8CH85B2GiPFjM6qsGnx1VNnmlC3-2JkioGjUv8lv03E3GLXafJmNaQj0j5_7uPMDpqUV_QcxB2h3CQ=="
+}
