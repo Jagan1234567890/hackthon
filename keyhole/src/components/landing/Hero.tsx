@@ -1,8 +1,10 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { PillBadge } from '@/components/ui/PillBadge';
 import { TiltCard } from '@/components/ui/TiltCard';
+import { PlainVerdictCard } from '@/components/ui/PlainVerdictCard';
 import { ArrowRight, Sparkles } from 'lucide-react';
 
 interface HeroProps {
@@ -32,19 +34,20 @@ export const Hero: React.FC<HeroProps> = ({ onStartRecovery, onReadMethod }) => 
 
       {/* Dual CTAs */}
       <div className="flex flex-wrap items-center justify-center gap-4 mb-12">
-        <button
-          onClick={onStartRecovery}
+        <Link
+          href="/dashboard"
           className="btn-primary px-8 py-3.5 rounded-xl text-sm font-semibold inline-flex items-center gap-2 shadow-2xl cursor-pointer"
         >
-          <span>Start Recovery</span>
+          <Sparkles className="w-4 h-4" />
+          <span>Launch AI Analysis Studio</span>
           <ArrowRight className="w-4 h-4" />
-        </button>
+        </Link>
 
         <button
-          onClick={onReadMethod}
+          onClick={onStartRecovery}
           className="btn-ghost px-6 py-3.5 rounded-xl text-sm font-medium text-[oklch(0.85_0.01_280)] cursor-pointer"
         >
-          Read the Method
+          Forensics Consoles
         </button>
       </div>
 
@@ -147,6 +150,24 @@ export const Hero: React.FC<HeroProps> = ({ onStartRecovery, onReadMethod }) => 
             </div>
           </div>
         </TiltCard>
+      </div>
+
+      {/* Live Embedded Plain Verdict Card Under Hero Demo (Section 2.4) */}
+      <div className="w-full max-w-2xl mt-12 flex flex-col items-center">
+        <div className="mb-3">
+          <PillBadge withDot variant="primary">
+            LIVE SIMPLE MODE &bull; EMBEDDED DEMO
+          </PillBadge>
+        </div>
+        <PlainVerdictCard
+          type="authenticity"
+          authenticityVerdict="MANIPULATION-INDICATORS-DETECTED"
+          strongestSignal="Blink rate anomaly & facial lighting phase discontinuity"
+          score={0.78}
+          uncertaintyBand={{ lower: 0.70, upper: 0.86 }}
+          className="text-left w-full"
+          onActionClick={onStartRecovery}
+        />
       </div>
     </section>
   );

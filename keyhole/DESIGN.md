@@ -50,3 +50,24 @@ All colors are defined strictly in OKLCH to preserve luminance parity and elimin
 4. **Recovery Console:** 6-stage cheapest-first recovery ladder, candidate ranking table, budgeted offline cracking with kill criteria, and 4-state terminal result drawer.
 5. **Immutable Case Ledger:** Hash-chained audit journal anchoring every case with SHA-256 Merkle links and independent re-verification.
 6. **Settings & Model Registry:** Operational threshold sliders (false-positive / false-negative tolerance), pinned open-weight model checksums, hardware budget, and privacy redaction rules.
+
+---
+
+## 4. Language & Plain-Language Layer (Simple Mode)
+
+### 4.1 Plain-Language Architecture & Single Source of Truth
+Simple Mode provides an accessible, jargon-free primary presentation without compromising mathematical or forensic rigor. Both Simple and Expert modes consume the identical underlying verdict engine and state store.
+- **Mapping Table (`plainCopy.ts`):** Centralized, typed dictionary mapping all engine verdicts (`MANIPULATION-INDICATORS-DETECTED`, `INCONCLUSIVE`, `AUTHENTIC-CONSISTENT`, `RECOVERED`, `LIKELY RECOVERABLE`, `LONG SHOT`, `INFEASIBLE`, and vault states) to active-voice, second-person sentences.
+- **The 18-Word Rule:** Every user-facing sentence in Simple Mode is hard-capped at a maximum of 18 words.
+- **Readability Ceiling:** Enforces Flesch-Kincaid Grade Level $\le 8.0$ (measured via automated test runner).
+- **Prohibited Softening:** An `INCONCLUSIVE` verdict is never softened to "probably real" or "fine"; verdicts reflect reality 1:1.
+
+### 4.2 Glossary Contract & Progressive Disclosure
+Technical nouns (e.g., *metadata*, *fingerprint (hash)*, *KDF*, *entropy*, *C2PA*, *nonce*) must resolve to an entry in `GLOSSARY_DICTIONARY` and are rendered as dotted-underlined interactive tokens:
+- **Hover/Focus Latency:** Opens a glass popover after 120ms delay (preventing sweep flicker) with a 200ms transition.
+- **Structure:** Two-line plain explanation followed by an "In technical terms" reference.
+- **Keyboard Navigation:** Fully accessible `<button>` element with `aria-describedby` and Escape-key dismiss.
+
+### 4.3 Escape Hatch Accordion
+Every Simple Mode verdict card features an inline "Show the technical detail" trigger. Expanding it reveals the corresponding Expert rows (raw command output, model version hashes, calibrated uncertainty band, and counter-evidence hypotheses) inline without page navigation or modal interruption.
+

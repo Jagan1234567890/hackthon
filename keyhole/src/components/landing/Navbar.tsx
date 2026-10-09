@@ -1,7 +1,9 @@
 'use client';
 
 import React from 'react';
-import { KeyRound, Shield, Lock, Wrench, Database, Settings } from 'lucide-react';
+import Link from 'next/link';
+import { KeyRound, Shield, Lock, Wrench, Database, Settings, ArrowUpRight } from 'lucide-react';
+import { ModeToggle } from '@/components/ui/ModeToggle';
 import { clsx } from 'clsx';
 
 export type AppSurface = 'landing' | 'authenticity' | 'vault' | 'recovery' | 'ledger' | 'settings';
@@ -101,10 +103,30 @@ export const Navbar: React.FC<NavbarProps> = ({ currentSurface, onNavigate }) =>
           </button>
         </div>
 
-        {/* Persistent Chip */}
-        <div className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-mono text-[10px] font-semibold border border-[oklch(0.72_0.17_155/35%)] bg-[oklch(0.72_0.17_155/10%)] text-[oklch(0.85_0.12_155)]">
-          <span className="w-1.5 h-1.5 rounded-full bg-[oklch(0.72_0.17_155)] animate-pulse" />
-          <span>0 BYTES UPLOADED</span>
+        {/* Auth & Mode Toggle */}
+        <div className="flex items-center gap-2">
+          <Link
+            href="/dashboard"
+            className="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-mono font-medium text-[oklch(0.66_0.015_280)] hover:text-white hover:bg-white/5 transition-colors"
+          >
+            <span>Dashboard</span>
+          </Link>
+
+          <Link
+            href="/login"
+            className="px-3 py-1.5 rounded-full text-xs font-mono font-medium text-[oklch(0.66_0.015_280)] hover:text-white transition-colors"
+          >
+            <span>Login</span>
+          </Link>
+
+          <Link
+            href="/signup"
+            className="px-3 py-1.5 rounded-full text-xs font-mono font-semibold bg-[oklch(0.62_0.22_295)] hover:brightness-110 text-white transition-all shadow-sm"
+          >
+            <span>Sign Up</span>
+          </Link>
+
+          <ModeToggle />
         </div>
       </nav>
     </header>

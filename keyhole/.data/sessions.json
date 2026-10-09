@@ -1,0 +1,146 @@
+[
+  {
+    "id": "e4416d0c-20b4-41ad-8924-d2505f19e40f",
+    "user_id": "262395a5-443b-4a04-a1ce-528a32e2d282",
+    "refresh_token": "$2b$08$wdevB1zWsth5E0fOyi3bSeAdP4p6noVtnMSXyHrfU1fFVyc3DifCe",
+    "device_info": "Unknown Device",
+    "ip_address": "127.0.0.1",
+    "expires_at": "2026-10-16T14:41:06.987Z",
+    "created_at": "2026-10-09T14:41:06.987Z"
+  },
+  {
+    "id": "d63440fb-38a9-4269-afaf-f684a8a52ec6",
+    "user_id": "262395a5-443b-4a04-a1ce-528a32e2d282",
+    "refresh_token": "$2b$08$gK6/.yF33HL6/1SuyWWXIu1dV/NWEjE7UAiHoe0e1zh1SZ5nM8QyC",
+    "device_info": "Unknown Device",
+    "ip_address": "127.0.0.1",
+    "expires_at": "2026-10-16T14:41:07.270Z",
+    "created_at": "2026-10-09T14:41:07.271Z"
+  },
+  {
+    "id": "b905405b-c4e5-43a8-8128-c345d66a184f",
+    "user_id": "b091de85-08d1-48ee-8cb0-54e0cc913b6c",
+    "refresh_token": "$2b$08$5XMlTdDs.F5z2nUOFqPseO1sN8Y04ZKhd8aCEQdZIRgx3dRebeq8q",
+    "device_info": "OAuth Client",
+    "ip_address": "127.0.0.1",
+    "expires_at": "2026-10-16T14:41:07.291Z",
+    "created_at": "2026-10-09T14:41:07.292Z"
+  },
+  {
+    "id": "7da8bdb1-4ffd-4579-9dcd-1225c7ef078b",
+    "user_id": "b091de85-08d1-48ee-8cb0-54e0cc913b6c",
+    "refresh_token": "$2b$08$fNVG6okUJQTm2Gu6eOf5yOkpwcFHUg2k6hzfoHPOU8I1604W7KZem",
+    "device_info": "OAuth Client",
+    "ip_address": "127.0.0.1",
+    "expires_at": "2026-10-16T14:41:07.323Z",
+    "created_at": "2026-10-09T14:41:07.324Z"
+  },
+  {
+    "id": "1c0805ad-a09e-4d75-92cb-69b5fab0e1d1",
+    "user_id": "3b761f11-1a1e-4c32-b0bb-20216f9b9ecc",
+    "refresh_token": "$2b$08$zCXPcGFZJzGdroc/wqgvBuTVdJr/qtS/n2z.sUAlt1yRhfXpO8ryK",
+    "device_info": "Unknown Device",
+    "ip_address": "127.0.0.1",
+    "expires_at": "2026-10-16T14:43:46.936Z",
+    "created_at": "2026-10-09T14:43:46.936Z"
+  },
+  {
+    "id": "cbc975a2-c694-4343-86b7-a0137b109e06",
+    "user_id": "3b761f11-1a1e-4c32-b0bb-20216f9b9ecc",
+    "refresh_token": "$2b$08$hbO3yLwTAbnvG1FWMpPAjeZkbiRgPuY3.nwRpFTeQ0q1I.NksX5Je",
+    "device_info": "Unknown Device",
+    "ip_address": "127.0.0.1",
+    "expires_at": "2026-10-16T14:43:47.253Z",
+    "created_at": "2026-10-09T14:43:47.253Z"
+  },
+  {
+    "id": "3aaae0c3-4048-4718-9377-3f3bd47a0857",
+    "user_id": "e4041b49-a402-42e9-803e-e8a86275a669",
+    "refresh_token": "$2b$08$KuNUHXwkOD1tRqAW6p66qOoYo1PAQEb81EcnxTy1jcedo5WaFQkuW",
+    "device_info": "OAuth Client",
+    "ip_address": "127.0.0.1",
+    "expires_at": "2026-10-16T14:43:47.278Z",
+    "created_at": "2026-10-09T14:43:47.279Z"
+  },
+  {
+    "id": "61539204-ed51-4f09-8b7e-04245b5fc64f",
+    "user_id": "e4041b49-a402-42e9-803e-e8a86275a669",
+    "refresh_token": "$2b$08$rvriIXZtdyacZ.H1VW2FVu6KNue9m/ihbZj8VObnbFVpXqyRPFCpy",
+    "device_info": "OAuth Client",
+    "ip_address": "127.0.0.1",
+    "expires_at": "2026-10-16T14:43:47.313Z",
+    "created_at": "2026-10-09T14:43:47.313Z"
+  },
+  {
+    "id": "fe270d22-096a-4a5d-bcdc-bd1fb8079bb0",
+    "user_id": "70dae8fb-34d5-441a-a1d0-30a844fb94d0",
+    "refresh_token": "$2b$08$K.qYk/YnJkb5B2EqqEkqJO8Vqh0T0KpcrtbEVq7FX408sXaEXSa9K",
+    "device_info": "node",
+    "ip_address": "::ffff:127.0.0.1",
+    "expires_at": "2026-10-16T14:53:08.855Z",
+    "created_at": "2026-10-09T14:53:08.856Z"
+  },
+  {
+    "id": "0ef02db8-63d1-46ec-af28-9286324960f4",
+    "user_id": "70dae8fb-34d5-441a-a1d0-30a844fb94d0",
+    "refresh_token": "$2b$08$WSnggrIPlbdTn3heNETG7uYb4gAQbUoyG07.dJPn/dEUHReBaFaAu",
+    "device_info": "node",
+    "ip_address": "::ffff:127.0.0.1",
+    "expires_at": "2026-10-16T14:53:09.174Z",
+    "created_at": "2026-10-09T14:53:09.175Z"
+  },
+  {
+    "id": "ba943ef1-058e-4523-bbc5-a0ae80b20d83",
+    "user_id": "fe55f374-78de-415f-ac34-3d678da895e1",
+    "refresh_token": "$2b$08$DTiBOPcR1gQmwpnvdxOFSuFC3/gUkfbjQWY1JAYSKmGQQdmncPSM2",
+    "device_info": "node",
+    "ip_address": "::ffff:127.0.0.1",
+    "expires_at": "2026-10-16T14:58:56.821Z",
+    "created_at": "2026-10-09T14:58:56.822Z"
+  },
+  {
+    "id": "6f6a0f83-1e53-4b1d-9670-28bb7cf0984d",
+    "user_id": "fe55f374-78de-415f-ac34-3d678da895e1",
+    "refresh_token": "$2b$08$w67TG1Gx.ExH8RBzYqtRKu7WES4sJQgDW2P0hiPPJF16PVzY2Jtiu",
+    "device_info": "node",
+    "ip_address": "::ffff:127.0.0.1",
+    "expires_at": "2026-10-16T14:58:57.125Z",
+    "created_at": "2026-10-09T14:58:57.126Z"
+  },
+  {
+    "id": "a65a5683-80a1-457a-9afe-e57567a743d9",
+    "user_id": "479b641f-33d3-4ba1-8975-123366e01b20",
+    "refresh_token": "$2b$08$Dy/.aPb7642ZEH/ETr7gVuClZJQ/Z4ws5ZnFPxuWpakSdbD1Grz3m",
+    "device_info": "Unknown Device",
+    "ip_address": "127.0.0.1",
+    "expires_at": "2026-10-16T14:59:04.930Z",
+    "created_at": "2026-10-09T14:59:04.931Z"
+  },
+  {
+    "id": "7d691907-b71a-420c-a703-ae11d1dd3a3a",
+    "user_id": "479b641f-33d3-4ba1-8975-123366e01b20",
+    "refresh_token": "$2b$08$lHGBgwPKAD4wpx/FupRb9O9R0/5BdeTy9wuIqtU3wGJe70vqY.F82",
+    "device_info": "Unknown Device",
+    "ip_address": "127.0.0.1",
+    "expires_at": "2026-10-16T14:59:05.234Z",
+    "created_at": "2026-10-09T14:59:05.235Z"
+  },
+  {
+    "id": "51a89209-e368-435b-9ab5-8335575714ad",
+    "user_id": "498afb73-231c-4e86-af05-cae210c963a8",
+    "refresh_token": "$2b$08$I6/tNtoD6RSoBcF54wYwue8wqwmAD0keWf1iblB/Dfo6LlmO1W/dm",
+    "device_info": "OAuth Client",
+    "ip_address": "127.0.0.1",
+    "expires_at": "2026-10-16T14:59:05.259Z",
+    "created_at": "2026-10-09T14:59:05.260Z"
+  },
+  {
+    "id": "06ddec4b-4adf-4b1a-8168-56e8a59b1e8d",
+    "user_id": "498afb73-231c-4e86-af05-cae210c963a8",
+    "refresh_token": "$2b$08$0k8EoYXmUHYD7Vfefjr7TOAfHe6dKVfnVhTX/BpxA2pjETkTvHkKa",
+    "device_info": "OAuth Client",
+    "ip_address": "127.0.0.1",
+    "expires_at": "2026-10-16T14:59:05.293Z",
+    "created_at": "2026-10-09T14:59:05.294Z"
+  }
+]

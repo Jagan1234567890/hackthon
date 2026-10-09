@@ -57,3 +57,14 @@ All operations execute strictly in the client sandbox (WebCrypto / local worker 
 | `Argon2id` | WebAssembly Native Worker | Memory-hard Key Derivation (64MB / 3 iterations) |
 | `PBKDF2-HMAC-SHA512`| Browser `crypto.subtle` | Fallback KDF (600,000 iterations minimum) |
 | `SHA-256` | Browser `crypto.subtle` | Bit-identical Integrity, Merkle Roots, Case Ledger |
+
+---
+
+## 5. Simple Mode Security Guarantees
+
+Simple mode changes no security behavior, hides no caveat, and both modes share one engine. Plain-language rendering is strictly an additive presentation-layer transform over the exact same underlying cryptographic and forensic data structures. 
+
+- **Zero Softening:** Underneath, every finding maintains its precise cryptographic state. An `INCONCLUSIVE` or `MANIPULATION-INDICATORS-DETECTED` verdict is never softened or concealed.
+- **Mandatory Caveats Retained:** Every plain-language card retains the mandatory caveat ("Absence of evidence is not evidence of absence", "Generalization across unseen generators is limited", and the permanent "DETECTION IS NOT PROOF" chip).
+- **Strict Local Execution:** Simple mode introduces no network telemetry, no external dictionary APIs, and no third-party tracking. All glossary popovers and readability checks execute 100% locally in-memory.
+

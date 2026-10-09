@@ -24,6 +24,9 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { BtnPrimary } from '@/components/ui/BtnPrimary';
+import { ModeToggle, DisplayMode } from '@/components/ui/ModeToggle';
+import { VAULT_PLAIN_MAPPINGS } from '@/lib/plainCopy';
+import { GuidedFlow } from '@/components/ui/GuidedFlow';
 
 interface VaultConsoleProps {
   settings: KeyholeSettings;
@@ -37,6 +40,7 @@ export const VaultConsole: React.FC<VaultConsoleProps> = ({ className }) => {
   const [isSealing, setIsSealing] = useState(false);
   const [sealProgress, setSealProgress] = useState<{ current: number; total: number } | null>(null);
   const [activeFileToSeal, setActiveFileToSeal] = useState<File | null>(null);
+  const [displayMode, setDisplayMode] = useState<DisplayMode>('simple');
 
   // Vault Items in Store
   const [vaultItems, setVaultItems] = useState<VaultStoreItem[]>([
@@ -164,12 +168,25 @@ export const VaultConsole: React.FC<VaultConsoleProps> = ({ className }) => {
           <div className="flex items-center gap-3">
             <ShieldAlert className="w-6 h-6 text-[oklch(0.63_0.2_25)] shrink-0" />
             <div>
-              <strong className="font-mono text-sm block">
-                VAULT TAMPER DETECTED: AEAD TAG MISMATCH AT CHUNK #{tamperBanner.chunkIndex ?? 0}
-              </strong>
-              <p className="text-xs text-[oklch(0.85_0.01_280)] font-sans">
-                Bytes modified at container offset. Authenticated encryption refused to release unverified plaintext.
-              </p>
+              {displayMode === 'simple' ? (
+                <>
+                  <strong className="font-sans text-sm block text-white">
+                    {VAULT_PLAIN_MAPPINGS.tampered.statusLine}
+                  </strong>
+                  <p className="text-xs text-[oklch(0.85_0.01_280)] font-sans mt-0.5">
+                    {VAULT_PLAIN_MAPPINGS.tampered.explanation} Compare the fingerprint with the one you saved.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <strong className="font-mono text-sm block">
+                    VAULT TAMPER DETECTED: AEAD TAG MISMATCH AT CHUNK #{tamperBanner.chunkIndex ?? 0}
+                  </strong>
+                  <p className="text-xs text-[oklch(0.85_0.01_280)] font-sans">
+                    Bytes modified at container offset. Authenticated encryption refused to release unverified plaintext.
+                  </p>
+                </>
+              )}
             </div>
           </div>
           <button
@@ -229,6 +246,10 @@ export const VaultConsole: React.FC<VaultConsoleProps> = ({ className }) => {
           })}
         </div>
 
+        <div className="flex justify-center">
+          <GuidedFlow />
+        </div>
+
         <div className="mt-auto p-3 rounded-xl bg-[oklch(0.08_0.005_280)] border border-[oklch(0.22_0.01_280)] text-[11px] font-mono text-[oklch(0.75_0.01_280)]">
           <span className="text-[oklch(0.62_0.22_295)] font-bold block mb-1">Envelope Security:</span>
           Per-chunk Merkle tags &bull; Monotonic Nonces &bull; Monitored Keyguard
@@ -237,7 +258,7 @@ export const VaultConsole: React.FC<VaultConsoleProps> = ({ className }) => {
 
       {/* CENTER DROP-TO-SEAL & UNSEAL PANEL */}
       <main className="flex-1 flex flex-col p-5 overflow-y-auto space-y-5">
-        <div className="flex items-center justify-between pb-3 border-b border-[oklch(0.22_0.01_280/60%)]">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[oklch(0.22_0.01_280/60%)]">
           <div>
             <h2 className="font-sans font-bold text-base text-white">
               Authenticated Encryption Vault (.keyhole)
@@ -246,6 +267,8 @@ export const VaultConsole: React.FC<VaultConsoleProps> = ({ className }) => {
               Streaming AES-256-GCM with Argon2id memory hardness and per-chunk tamper localization.
             </p>
           </div>
+
+          <ModeToggle mode={displayMode} onChange={setDisplayMode} />
         </div>
 
         {/* SEAL NEW FILE PANEL */}

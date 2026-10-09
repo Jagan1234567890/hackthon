@@ -6,6 +6,9 @@ import { KeyholeSettings } from '@/types/settings';
 import { analyzeMediaAuthenticity } from '@/lib/authenticity-engine';
 import { appendLedgerRecord } from '@/lib/ledger-engine';
 import { VerdictCard } from '@/components/ui/VerdictCard';
+import { PlainVerdictCard } from '@/components/ui/PlainVerdictCard';
+import { ModeToggle, DisplayMode } from '@/components/ui/ModeToggle';
+import { GuidedFlow } from '@/components/ui/GuidedFlow';
 import { FrameScrubber } from '@/components/ui/FrameScrubber';
 import { HeatmapOverlay } from '@/components/ui/HeatmapOverlay';
 import { Terminal, LogLine } from '@/components/ui/Terminal';
@@ -36,6 +39,7 @@ export const AuthenticityConsole: React.FC<AuthenticityConsoleProps> = ({
   const [activeFrameIndex, setActiveFrameIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<'overview' | 'frames' | 'signals' | 'provenance'>('overview');
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [displayMode, setDisplayMode] = useState<DisplayMode>('simple');
   const [logs, setLogs] = useState<LogLine[]>([]);
 
   const addLog = (type: LogLine['type'], text: string) => {
@@ -215,45 +219,50 @@ export const AuthenticityConsole: React.FC<AuthenticityConsoleProps> = ({
 
       {/* CENTER FLUID TABS */}
       <main className="flex-1 flex flex-col p-5 overflow-y-auto space-y-5">
-        {/* Tab Headers & Run Button */}
-        <div className="flex items-center justify-between pb-3 border-b border-[oklch(0.22_0.01_280/60%)]">
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[oklch(0.08_0.005_280)] border border-[oklch(0.22_0.01_280/60%)]">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={clsx(
-                'px-3 py-1.5 rounded-lg font-mono text-xs font-semibold cursor-pointer transition-colors',
-                activeTab === 'overview' ? 'bg-[oklch(0.62_0.22_295)] text-white' : 'text-[oklch(0.66_0.015_280)] hover:text-white'
-              )}
-            >
-              Overview &amp; Verdict
-            </button>
-            <button
-              onClick={() => setActiveTab('frames')}
-              className={clsx(
-                'px-3 py-1.5 rounded-lg font-mono text-xs font-semibold cursor-pointer transition-colors',
-                activeTab === 'frames' ? 'bg-[oklch(0.62_0.22_295)] text-white' : 'text-[oklch(0.66_0.015_280)] hover:text-white'
-              )}
-            >
-              Frames &amp; Heatmaps
-            </button>
-            <button
-              onClick={() => setActiveTab('signals')}
-              className={clsx(
-                'px-3 py-1.5 rounded-lg font-mono text-xs font-semibold cursor-pointer transition-colors',
-                activeTab === 'signals' ? 'bg-[oklch(0.62_0.22_295)] text-white' : 'text-[oklch(0.66_0.015_280)] hover:text-white'
-              )}
-            >
-              Signal Matrix
-            </button>
-            <button
-              onClick={() => setActiveTab('provenance')}
-              className={clsx(
-                'px-3 py-1.5 rounded-lg font-mono text-xs font-semibold cursor-pointer transition-colors',
-                activeTab === 'provenance' ? 'bg-[oklch(0.62_0.22_295)] text-white' : 'text-[oklch(0.66_0.015_280)] hover:text-white'
-              )}
-            >
-              C2PA Provenance
-            </button>
+        {/* Tab Headers, Mode Toggle & Run Button */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[oklch(0.22_0.01_280/60%)]">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[oklch(0.08_0.005_280)] border border-[oklch(0.22_0.01_280/60%)]">
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={clsx(
+                  'px-3 py-1.5 rounded-lg font-mono text-xs font-semibold cursor-pointer transition-colors',
+                  activeTab === 'overview' ? 'bg-[oklch(0.62_0.22_295)] text-white' : 'text-[oklch(0.66_0.015_280)] hover:text-white'
+                )}
+              >
+                Overview &amp; Verdict
+              </button>
+              <button
+                onClick={() => setActiveTab('frames')}
+                className={clsx(
+                  'px-3 py-1.5 rounded-lg font-mono text-xs font-semibold cursor-pointer transition-colors',
+                  activeTab === 'frames' ? 'bg-[oklch(0.62_0.22_295)] text-white' : 'text-[oklch(0.66_0.015_280)] hover:text-white'
+                )}
+              >
+                Frames &amp; Heatmaps
+              </button>
+              <button
+                onClick={() => setActiveTab('signals')}
+                className={clsx(
+                  'px-3 py-1.5 rounded-lg font-mono text-xs font-semibold cursor-pointer transition-colors',
+                  activeTab === 'signals' ? 'bg-[oklch(0.62_0.22_295)] text-white' : 'text-[oklch(0.66_0.015_280)] hover:text-white'
+                )}
+              >
+                Signal Matrix
+              </button>
+              <button
+                onClick={() => setActiveTab('provenance')}
+                className={clsx(
+                  'px-3 py-1.5 rounded-lg font-mono text-xs font-semibold cursor-pointer transition-colors',
+                  activeTab === 'provenance' ? 'bg-[oklch(0.62_0.22_295)] text-white' : 'text-[oklch(0.66_0.015_280)] hover:text-white'
+                )}
+              >
+                C2PA Provenance
+              </button>
+            </div>
+
+            {/* Mode Toggle (Section 1.1) */}
+            <ModeToggle mode={displayMode} onChange={setDisplayMode} />
           </div>
 
           <button
@@ -270,12 +279,31 @@ export const AuthenticityConsole: React.FC<AuthenticityConsoleProps> = ({
         {activeTab === 'overview' && (
           <div className="space-y-5">
             {!result ? (
-              <div className="p-12 text-center rounded-2xl border border-dashed border-[oklch(0.22_0.01_280)] bg-[oklch(0.04_0_0)] text-xs text-[oklch(0.55_0.01_280)]">
-                Drop media on the left and click &quot;Analyze Authenticity&quot; to compute calibrated evidence.
+              <div className="space-y-4">
+                <div className="p-12 text-center rounded-2xl border border-dashed border-[oklch(0.22_0.01_280)] bg-[oklch(0.04_0_0)] text-xs text-[oklch(0.55_0.01_280)]">
+                  Drop media on the left and click &quot;Analyze Authenticity&quot; to compute calibrated evidence.
+                </div>
+                <div className="flex justify-center">
+                  <GuidedFlow />
+                </div>
+              </div>
+            ) : displayMode === 'simple' ? (
+              /* Simple Mode Primary Verdict Card (Section 2) */
+              <div className="flex flex-col items-center sm:items-start">
+                <PlainVerdictCard
+                  type="authenticity"
+                  authenticityVerdict={result.verdict}
+                  strongestSignal={result.signals.find((s) => s.verdict === 'FAIL')?.name}
+                  signals={result.signals}
+                  score={result.calibratedScore}
+                  uncertaintyBand={result.uncertaintyBand}
+                  counterEvidence={result.counterEvidence}
+                  toolVersions={result.loadedModels}
+                />
               </div>
             ) : (
               <>
-                {/* Main Verdict Card with Calibration and Uncertainty Band */}
+                {/* Expert Mode: Exact Prior Panels Preserved Verbatim */}
                 <VerdictCard
                   verdict={result.verdict}
                   score={result.calibratedScore}

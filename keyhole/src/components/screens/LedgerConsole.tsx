@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { LedgerRecord } from '@/types/ledger';
 import { getLedgerRecords, verifyLedgerChain } from '@/lib/ledger-engine';
 import { LedgerTable } from '@/components/ui/LedgerTable';
+import { ModeToggle } from '@/components/ui/ModeToggle';
 import { ShieldCheck } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -25,9 +26,12 @@ export const LedgerConsole: React.FC<{ className?: string }> = ({ className }) =
             Cryptographically anchored tamper-evident journal recording all media forgery inspections, vault operations, and recovery runs.
           </p>
         </div>
-        <div className="font-mono text-xs text-[oklch(0.72_0.17_155)] border border-[oklch(0.72_0.17_155/30%)] bg-[oklch(0.72_0.17_155/10%)] px-3 py-1 rounded-full flex items-center gap-1.5">
-          <ShieldCheck className="w-3.5 h-3.5" />
-          <span>SHA-256 Merkle Chain Active</span>
+        <div className="flex items-center gap-3">
+          <ModeToggle />
+          <div className="font-mono text-xs text-[oklch(0.72_0.17_155)] border border-[oklch(0.72_0.17_155/30%)] bg-[oklch(0.72_0.17_155/10%)] px-3 py-1 rounded-full flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>SHA-256 Merkle Chain Active</span>
+          </div>
         </div>
       </div>
 

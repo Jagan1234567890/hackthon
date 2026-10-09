@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { AnalyzedFile, RecoveryVerdictData } from '@/types/recovery';
 import { generateReportJson, generateReportPlainText } from '@/lib/recovery-engine';
+import { PlainVerdictCard } from '@/components/ui/PlainVerdictCard';
+import { ModeToggle, DisplayMode } from '@/components/ui/ModeToggle';
 import {
   CheckCircle2,
   AlertTriangle,
@@ -32,6 +34,7 @@ export const ResultDrawer: React.FC<ResultDrawerProps> = ({
   const [isMasked, setIsMasked] = useState(true);
   const [copiedKey, setCopiedKey] = useState(false);
   const [copiedPlan, setCopiedPlan] = useState<number | null>(null);
+  const [displayMode, setDisplayMode] = useState<DisplayMode>('simple');
 
   const handleCopyPassphrase = () => {
     if (verdictData.recoveredPassphrase) {
@@ -141,6 +144,9 @@ export const ResultDrawer: React.FC<ResultDrawerProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Mode Toggle (Section 1.1) */}
+            <ModeToggle mode={displayMode} onChange={setDisplayMode} />
+
             <button
               onClick={handleDownloadJson}
               className="btn-ghost px-3 py-1.5 rounded-xl text-xs inline-flex items-center gap-1.5 text-[oklch(0.85_0.01_280)]"
@@ -168,10 +174,28 @@ export const ResultDrawer: React.FC<ResultDrawerProps> = ({
           </div>
         </div>
 
-        {/* 1. Verdict Detail Rationale */}
-        <div className="p-4 rounded-xl bg-[oklch(0.04_0_0)] border border-[oklch(0.18_0.01_280)] text-xs text-[oklch(0.85_0.01_280)] leading-relaxed">
-          {verdictData.reason}
-        </div>
+        {displayMode === 'simple' ? (
+          /* Simple Mode Recovery Result Card */
+          <div className="flex flex-col items-center sm:items-start">
+            <PlainVerdictCard
+              type="recovery"
+              recoveryVerdict={verdictData.verdict}
+              recoveryDetails={{
+                sha256: analyzedFile.sha256,
+                timeEst: verdictData.nextPassCost,
+              }}
+              rawCommands={verdictData.evidence.map((e) => ({
+                command: e.command,
+                output: e.output,
+              }))}
+            />
+          </div>
+        ) : (
+          <>
+            {/* 1. Verdict Detail Rationale */}
+            <div className="p-4 rounded-xl bg-[oklch(0.04_0_0)] border border-[oklch(0.18_0.01_280)] text-xs text-[oklch(0.85_0.01_280)] leading-relaxed">
+              {verdictData.reason}
+            </div>
 
         {/* 2. Recovered Passphrase (RECOVERED State) */}
         {verdictData.recoveredPassphrase && (
@@ -301,6 +325,8 @@ export const ResultDrawer: React.FC<ResultDrawerProps> = ({
             ))}
           </ul>
         </div>
+        </>
+        )}
       </div>
     </div>
   );
