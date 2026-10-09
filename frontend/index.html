@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TrustMark — Provenance & Detection System</title>
+  <meta name="description" content="A hybrid digital trust system that cryptographically signs content at capture time and uses AI to analyse anything unsigned." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Cursor spotlight -->
+  <div id="cursor-spotlight" aria-hidden="true"></div>
+
+  <!-- Grid overlay -->
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <!-- Stardust particles -->
+  <div class="stardust" id="stardust" aria-hidden="true"></div>
+
+  <!-- Meteor streaks -->
+  <div class="meteors" id="meteors" aria-hidden="true"></div>
+
+  <!-- ── Header ── -->
+  <header class="header">
+    <div class="header-pill">
+      <div class="logo">
+        <div class="logo-spark" aria-hidden="true">🔐</div>
+        <span class="logo-text">TrustMark</span>
+        <span class="logo-badge">BETA</span>
+      </div>
+
+      <nav class="nav" role="navigation" aria-label="Main navigation">
+        <button class="nav-tab active" id="tab-sign"    onclick="switchTab('sign')"    aria-selected="true">Sign</button>
+        <button class="nav-tab"        id="tab-verify"  onclick="switchTab('verify')"  aria-selected="false">Verify</button>
+        <button class="nav-tab"        id="tab-tamper"  onclick="switchTab('tamper')"  aria-selected="false">Tamper Demo</button>
+        <button class="nav-tab"        id="tab-detect"  onclick="switchTab('detect')"  aria-selected="false">AI Detect</button>
+        <button class="nav-tab"        id="tab-history" onclick="switchTab('history')" aria-selected="false">History</button>
+      </nav>
+
+      <div class="server-status" id="serverStatus" aria-live="polite">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Connecting…</span>
+      </div>
+
+      <button class="nav-cta" onclick="switchTab('sign')">Get Started →</button>
+    </div>
+  </header>
+
+  <!-- ── Main ── -->
+  <main class="main">
+
+    <!-- ═══════════ HERO ═══════════ -->
+    <section class="hero" id="hero">
+
+      <div class="hero-eyebrow">
+        <span class="hero-eyebrow-dot"></span>
+        Hybrid Provenance + AI Detection System
+      </div>
+
+      <h1 class="hero-title">
+        <span class="gradient-text">Prove It's Real.</span><br />
+        Know When It's <span class="accent-word">Not.</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        Cryptographically sign content at capture time. AI analyses anything unsigned —
+        so every file gets a meaningful, verifiable trust verdict.
+      </p>
+
+      <div class="hero-ctas">
+        <button class="btn btn-primary" onclick="switchTab('sign')">
+          <span class="btn-icon">🔏</span> Sign a File
+        </button>
+        <button class="btn btn-secondary" onclick="switchTab('verify')">
+          <span class="btn-icon">✅</span> Verify Authenticity
+        </button>
+      </div>
+
+      <div class="hero-badges">
+        <span class="hero-badge green"><span class="hero-badge-dot"></span>Ed25519 Signing</span>
+        <span class="hero-badge blue"><span class="hero-badge-dot"></span>SHA-256 Hashing</span>
+        <span class="hero-badge purple"><span class="hero-badge-dot"></span>AI Detection Fallback</span>
+        <span class="hero-badge orange"><span class="hero-badge-dot"></span>Chain of Custody</span>
+      </div>
+    </section>
+
+    <!-- ═══════════ TELEMETRY ═══════════ -->
+    <div class="telemetry-bar" aria-label="Live system telemetry">
+      <div class="telemetry-item">
+        <span>UPTIME</span>
+        <span class="telemetry-val green" id="tel-uptime">99.98%</span>
+      </div>
+      <span class="telemetry-sep">|</span>
+      <div class="telemetry-item">
+        <span>LATENCY</span>
+        <span class="telemetry-val accent" id="tel-latency">&lt;14ms</span>
+      </div>
+      <span class="telemetry-sep">|</span>
+      <div class="telemetry-item">
+        <span>SIGNED</span>
+        <span class="telemetry-val" id="tel-signed">0</span>
+      </div>
+      <span class="telemetry-sep">|</span>
+      <div class="telemetry-item">
+        <span>VERIFIED</span>
+        <span class="telemetry-val" id="tel-verified">0</span>
+      </div>
+      <span class="telemetry-sep">|</span>
+      <div class="telemetry-item">
+        <span>STATUS</span>
+        <span class="telemetry-val green" id="tel-status">NOMINAL</span>
+      </div>
+    </div>
+
+    <!-- ═══════════ MARQUEE ═══════════ -->
+    <div class="marquee-wrap" aria-hidden="true">
+      <div class="marquee-track">
+        <span class="marquee-item">🔐 Ed25519</span>
+        <span class="marquee-item">🔑 SHA-256</span>
+        <span class="marquee-item">🤖 SigLIP AI</span>
+        <span class="marquee-item">📋 C2PA-Inspired</span>
+        <span class="marquee-item">⛓️ Chain of Custody</span>
+        <span class="marquee-item">🛡️ Tamper Detection</span>
+        <span class="marquee-item">🧬 Deepfake Analysis</span>
+        <span class="marquee-item">📸 Content Provenance</span>
+        <span class="marquee-item">🔐 Ed25519</span>
+        <span class="marquee-item">🔑 SHA-256</span>
+        <span class="marquee-item">🤖 SigLIP AI</span>
+        <span class="marquee-item">📋 C2PA-Inspired</span>
+        <span class="marquee-item">⛓️ Chain of Custody</span>
+        <span class="marquee-item">🛡️ Tamper Detection</span>
+        <span class="marquee-item">🧬 Deepfake Analysis</span>
+        <span class="marquee-item">📸 Content Provenance</span>
+      </div>
+    </div>
+
+    <!-- ═══════════ HOW IT WORKS ═══════════ -->
+    <section class="how-it-works" aria-label="How TrustMark works">
+      <div class="flow-steps">
+        <div class="flow-step">
+          <span class="step-icon">📸</span>
+          <span class="step-label">Upload</span>
+        </div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">
+          <span class="step-icon">🔏</span>
+          <span class="step-label">Sign</span>
+        </div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">
+          <span class="step-icon">✅</span>
+          <span class="step-label">Verify</span>
+        </div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-step">
+          <span class="step-icon">🛡️</span>
+          <span class="step-label">Trust</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ PANELS ═══════════ -->
+    <div class="panels">
+
+      <!-- SIGN -->
+      <section class="panel active" id="panel-sign" aria-labelledby="tab-sign">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <span class="panel-icon">🔏</span> Sign &amp; Secure
+          </h2>
+          <p class="panel-desc">
+            Upload any image or video. TrustMark generates a SHA-256 fingerprint,
+            signs it with Ed25519, and stores a tamper-evident manifest.
+          </p>
+        </div>
+
+        <div class="upload-area" id="signDrop" role="button" tabindex="0"
+             aria-label="Drop zone for file signing"
+             ondragover="handleDragOver(event)" ondrop="handleDrop(event,'sign')"
+             onclick="document.getElementById('signInput').click()"
+             onkeydown="if(event.key==='Enter')document.getElementById('signInput').click()">
+          <div class="upload-icon" aria-hidden="true">🖼️</div>
+          <div class="upload-text">Drop an image or video here</div>
+          <div class="upload-hint">or click to browse — JPG, PNG, MP4, WebM, GIF</div>
+          <input type="file" id="signInput" accept="image/*,video/*" style="display:none"
+                 onchange="handleFileSelect(event,'sign')" aria-label="Select file to sign" />
+        </div>
+
+        <div class="form-row">
+          <label class="form-label" for="deviceId">Device / Source ID</label>
+          <input class="form-input" type="text" id="deviceId"
+                 value="web-upload" placeholder="e.g. Camera-A, journalist-phone-1"
+                 aria-label="Device or source identifier" />
+        </div>
+        <div class="form-row">
+          <label class="form-label" for="signNote">Note (optional)</label>
+          <input class="form-input" type="text" id="signNote"
+                 placeholder="e.g. Press conference, product photo…"
+                 aria-label="Optional note for the manifest" />
+        </div>
+
+        <button class="btn btn-primary" id="signBtn" onclick="signFile()" disabled aria-label="Sign selected file">
+          <span class="btn-icon">🔏</span> Sign File
+        </button>
+
+        <div id="signPreview" class="file-preview hidden" aria-live="polite"></div>
+        <div id="signResult" class="result-area hidden" aria-live="polite"></div>
+      </section>
+
+      <!-- VERIFY -->
+      <section class="panel" id="panel-verify" aria-labelledby="tab-verify">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <span class="panel-icon">✅</span> Verify Authenticity
+          </h2>
+          <p class="panel-desc">
+            Upload any file. If it was signed by TrustMark, you'll get a
+            cryptographic proof of authenticity. Otherwise AI analysis kicks in
+            as a best-effort fallback.
+          </p>
+        </div>
+
+        <div class="upload-area" id="verifyDrop" role="button" tabindex="0"
+             aria-label="Drop zone for file verification"
+             ondragover="handleDragOver(event)" ondrop="handleDrop(event,'verify')"
+             onclick="document.getElementById('verifyInput').click()"
+             onkeydown="if(event.key==='Enter')document.getElementById('verifyInput').click()">
+          <div class="upload-icon" aria-hidden="true">🔍</div>
+          <div class="upload-text">Drop a file to verify</div>
+          <div class="upload-hint">or click to browse</div>
+          <input type="file" id="verifyInput" accept="image/*,video/*" style="display:none"
+                 onchange="handleFileSelect(event,'verify')" aria-label="Select file to verify" />
+        </div>
+
+        <button class="btn btn-secondary" id="verifyBtn" onclick="verifyFile()" disabled aria-label="Verify selected file">
+          <span class="btn-icon">🔍</span> Verify File
+        </button>
+
+        <div id="verifyPreview" class="file-preview hidden" aria-live="polite"></div>
+        <div id="verifyResult" class="result-area hidden" aria-live="polite"></div>
+      </section>
+
+      <!-- TAMPER -->
+      <section class="panel" id="panel-tamper" aria-labelledby="tab-tamper">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <span class="panel-icon">⚠️</span> Tamper Detection Demo
+          </h2>
+          <p class="panel-desc">
+            Sign a file first, then open it in an editor, make any change (even
+            flip one pixel), re-upload it here. Watch the hash mismatch and
+            signature failure in real time.
+          </p>
+        </div>
+
+        <div class="tamper-steps">
+          <div class="tamper-step done" id="tamperStep1">
+            <span class="ts-num">1</span>
+            <span class="ts-text">Sign an original file (use the Sign tab)</span>
+          </div>
+          <div class="tamper-step" id="tamperStep2">
+            <span class="ts-num">2</span>
+            <span class="ts-text">Edit the file externally (add text, crop, etc.)</span>
+          </div>
+          <div class="tamper-step" id="tamperStep3">
+            <span class="ts-num">3</span>
+            <span class="ts-text">Upload the modified file below</span>
+          </div>
+        </div>
+
+        <div class="upload-area" id="tamperDrop" role="button" tabindex="0"
+             aria-label="Drop zone for tamper detection"
+             ondragover="handleDragOver(event)" ondrop="handleDrop(event,'tamper')"
+             onclick="document.getElementById('tamperInput').click()"
+             onkeydown="if(event.key==='Enter')document.getElementById('tamperInput').click()">
+          <div class="upload-icon" aria-hidden="true">⚠️</div>
+          <div class="upload-text">Drop the modified file here</div>
+          <div class="upload-hint">or click to browse</div>
+          <input type="file" id="tamperInput" accept="image/*,video/*" style="display:none"
+                 onchange="handleFileSelect(event,'tamper')" aria-label="Select modified file" />
+        </div>
+
+        <button class="btn btn-danger" id="tamperBtn" onclick="tamperDemo()" disabled aria-label="Check for tampering">
+          <span class="btn-icon">⚠️</span> Check for Tampering
+        </button>
+
+        <div id="tamperPreview" class="file-preview hidden" aria-live="polite"></div>
+        <div id="tamperResult" class="result-area hidden" aria-live="polite"></div>
+      </section>
+
+      <!-- AI DETECT -->
+      <section class="panel" id="panel-detect" aria-labelledby="tab-detect">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <span class="panel-icon">🤖</span> AI Deepfake Detector
+          </h2>
+          <p class="panel-desc">
+            Upload any unsigned image and our AI model analyses it for signs of
+            synthetic generation. Results are a probability estimate — not a guarantee.
+            Always treat borderline cases with scepticism.
+          </p>
+          <div class="info-banner">
+            <span class="info-icon">ℹ️</span>
+            <span>This uses <strong>prithivMLmods/deepfake-detector-model-v1</strong> (SigLIP-based).
+            The model downloads on first use (~350 MB). Results are probabilistic, not conclusive.</span>
+          </div>
+        </div>
+
+        <div class="upload-area" id="detectDrop" role="button" tabindex="0"
+             aria-label="Drop zone for AI detection"
+             ondragover="handleDragOver(event)" ondrop="handleDrop(event,'detect')"
+             onclick="document.getElementById('detectInput').click()"
+             onkeydown="if(event.key==='Enter')document.getElementById('detectInput').click()">
+          <div class="upload-icon" aria-hidden="true">🤖</div>
+          <div class="upload-text">Drop an image for AI analysis</div>
+          <div class="upload-hint">or click to browse — images only</div>
+          <input type="file" id="detectInput" accept="image/*" style="display:none"
+                 onchange="handleFileSelect(event,'detect')" aria-label="Select image for AI detection" />
+        </div>
+
+        <button class="btn btn-ai" id="detectBtn" onclick="detectFile()" disabled aria-label="Run AI detection">
+          <span class="btn-icon">🤖</span> Run AI Analysis
+        </button>
+
+        <div id="detectPreview" class="file-preview hidden" aria-live="polite"></div>
+        <div id="detectResult" class="result-area hidden" aria-live="polite"></div>
+      </section>
+
+      <!-- HISTORY -->
+      <section class="panel" id="panel-history" aria-labelledby="tab-history">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <span class="panel-icon">📋</span> Activity History
+          </h2>
+          <p class="panel-desc">
+            Recent verification events and all signed manifests stored in this session.
+          </p>
+        </div>
+
+        <div class="history-controls">
+          <button class="btn btn-ghost" onclick="loadHistory()" aria-label="Refresh history">
+            ↻ Refresh
+          </button>
+        </div>
+
+        <div class="history-section">
+          <h3 class="history-heading">Recent Verifications</h3>
+          <div id="verificationHistory" class="history-list" aria-live="polite">
+            <p class="empty-state">No verifications yet. Try signing and verifying a file.</p>
+          </div>
+        </div>
+
+        <div class="history-section">
+          <h3 class="history-heading">Signed Manifests</h3>
+          <div id="manifestList" class="history-list" aria-live="polite">
+            <p class="empty-state">No signed files yet.</p>
+          </div>
+        </div>
+
+        <div class="history-section" id="chainSection" style="display:none">
+          <h3 class="history-heading">Chain of Custody</h3>
+          <div id="chainTimeline" class="timeline" aria-live="polite"></div>
+          <canvas id="chainChart" height="200" style="margin-top:1rem;" aria-label="Chain of custody chart"></canvas>
+        </div>
+      </section>
+
+    </div><!-- /panels -->
+  </main>
+
+  <!-- ── Footer ── -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">TrustMark</div>
+      <p>Provenance + Detection Hybrid System &nbsp;•&nbsp;
+        <span>Ed25519 + SHA-256 + SigLIP AI</span> &nbsp;•&nbsp;
+        <span>Built for Cybersecurity Hackathon 2026</span>
+      </p>
+      <p class="footer-disclaimer">
+        ⚠️ The provenance layer only protects content signed by <em>this system</em>.
+        The AI detector is a best-effort fallback, not a guarantee.
+        Never rely solely on automated tools for critical trust decisions.
+      </p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+
+  <!-- Kinetic effects -->
+  <script>
+    // ── Cursor spotlight ──
+    const spotlight = document.getElementById('cursor-spotlight');
+    document.addEventListener('mousemove', e => {
+      spotlight.style.left = e.clientX + 'px';
+      spotlight.style.top  = e.clientY + 'px';
+    });
+
+    // ── Stardust particles ──
+    const stardustEl = document.getElementById('stardust');
+    for (let i = 0; i < 60; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      const size = Math.random() * 2 + 1;
+      star.style.cssText = `
+        left: ${Math.random()*100}%;
+        top: ${Math.random()*100}%;
+        width: ${size}px; height: ${size}px;
+        --dx: ${(Math.random()-0.5)*120}px;
+        --dy: ${(Math.random()-0.5)*120}px;
+        animation-duration: ${8 + Math.random()*16}s;
+        animation-delay: ${Math.random()*10}s;
+        opacity: ${0.3 + Math.random()*0.5};
+      `;
+      stardustEl.appendChild(star);
+    }
+
+    // ── Meteor streaks ──
+    const meteorsEl = document.getElementById('meteors');
+    for (let i = 0; i < 6; i++) {
+      const meteor = document.createElement('div');
+      meteor.className = 'meteor';
+      meteor.style.cssText = `
+        left: ${20 + Math.random()*70}%;
+        animation-duration: ${4 + Math.random()*6}s;
+        animation-delay: ${Math.random()*12}s;
+      `;
+      meteorsEl.appendChild(meteor);
+    }
+
+    // ── Live telemetry drift ──
+    const latencies = ['<12ms','<14ms','<11ms','<16ms','<13ms','<15ms'];
+    let telIdx = 0;
+    setInterval(() => {
+      document.getElementById('tel-latency').textContent = latencies[telIdx++ % latencies.length];
+    }, 2800);
+  </script>
+</body>
+</html>

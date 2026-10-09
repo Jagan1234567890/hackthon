@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "file_hash": "0bce11bc4b48528359296a046928abc42c6ef539e72826d9f2b2bb270989799c",
+  "hash_algorithm": "SHA-256",
+  "original_filename": "original.jpg",
+  "timestamp": "2026-10-07T16:16:08.922999+00:00",
+  "device_id": "web-upload",
+  "public_key": "7480a60f16a80c0926cb88226ebef4426bdc02daf77f1eeb915a14acf9aa985e",
+  "note": "",
+  "signature": "ycdR2EGIdX1d5uCChpfKsbG27cnQVwjBPc6KPfFjJW_FD1N14AVwgxNtEfrQoG6LRNzwuHsQDCFKKN-dmvM5DA=="
+}

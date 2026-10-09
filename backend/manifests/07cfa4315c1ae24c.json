@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "file_hash": "07cfa4315c1ae24cfb2d213cad56bf616e8d8c5b097863258c62beda6e365435",
+  "hash_algorithm": "SHA-256",
+  "original_filename": "test_image.jpg",
+  "timestamp": "2026-10-07T16:15:41.101090+00:00",
+  "device_id": "test-device",
+  "public_key": "7480a60f16a80c0926cb88226ebef4426bdc02daf77f1eeb915a14acf9aa985e",
+  "note": "",
+  "signature": "rnVTK7fFlg4hXPxgVztEMMqL-nKyRJhpMXwN8QcyKLme3pR6Cif50R26kyuITTXJt5Bj3mz_R0PkaP1gX_HNBg=="
+}
