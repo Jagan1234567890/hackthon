@@ -24,8 +24,10 @@ import {
   Save,
   RefreshCw,
   LogOut,
+  Brain,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store/useAppStore';
+import { ModelTrainingModal } from '@/components/ui/ModelTrainingModal';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -51,6 +53,7 @@ export default function SettingsPage() {
   const [profileSuccess, setProfileSuccess] = useState(false);
   const [purgingTemp, setPurgingTemp] = useState(false);
   const [purgeSuccess, setPurgeSuccess] = useState<string | null>(null);
+  const [isTrainingOpen, setIsTrainingOpen] = useState(false);
 
   // Sync state when user is loaded
   useEffect(() => {
@@ -254,9 +257,19 @@ export default function SettingsPage() {
                 </p>
               </div>
             </div>
-            <span className="px-2.5 py-1 rounded-full text-xs font-mono bg-blue-500/10 text-blue-300 border border-blue-500/30">
-              Target &gt;90% Accuracy
-            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsTrainingOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-[oklch(0.62_0.22_295)] hover:bg-[oklch(0.58_0.24_295)] text-white shadow-lg shadow-purple-500/20 active:scale-95 transition-all cursor-pointer"
+              >
+                <Brain className="w-3.5 h-3.5" />
+                <span>Train to Perfection</span>
+              </button>
+              <span className="px-2.5 py-1 rounded-full text-xs font-mono bg-blue-500/10 text-blue-300 border border-blue-500/30">
+                Target &gt;90% Accuracy
+              </span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -526,6 +539,11 @@ export default function SettingsPage() {
           </div>
         </section>
       </main>
+
+      <ModelTrainingModal
+        isOpen={isTrainingOpen}
+        onClose={() => setIsTrainingOpen(false)}
+      />
     </div>
   );
 }

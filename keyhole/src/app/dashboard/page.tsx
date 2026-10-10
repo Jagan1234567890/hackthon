@@ -18,13 +18,16 @@ import {
   Activity,
   ArrowUpRight,
   TrendingUp,
+  Brain,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store/useAppStore';
+import { ModelTrainingModal } from '@/components/ui/ModelTrainingModal';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user, sessionId, logout, setWidgetOpen } = useAppStore();
-  const [metrics, setMetrics] = useState<Record<string, unknown> | null>(null);
+  const [metrics, setMetrics] = useState<any | null>(null);
+  const [isTrainingOpen, setIsTrainingOpen] = useState(false);
 
   useEffect(() => {
     fetch('/api/metrics/accuracy')
@@ -248,9 +251,18 @@ export default function DashboardPage() {
                 confidence calibration.
               </p>
             </div>
-            <span className="px-3 py-1 rounded-full text-xs font-mono bg-purple-500/10 text-purple-300 border border-purple-500/30">
-              Calibrated Live
-            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsTrainingOpen(true)}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[oklch(0.62_0.22_295)] hover:bg-[oklch(0.58_0.24_295)] text-white text-xs font-bold shadow-lg shadow-purple-500/25 active:scale-95 transition-all cursor-pointer"
+              >
+                <Brain className="w-3.5 h-3.5" />
+                <span>Train Models to Perfection</span>
+              </button>
+              <span className="px-3 py-1 rounded-full text-xs font-mono bg-purple-500/10 text-purple-300 border border-purple-500/30">
+                Calibrated Live
+              </span>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -280,6 +292,17 @@ export default function DashboardPage() {
           </div>
         </div>
       </main>
+
+      <ModelTrainingModal
+        isOpen={isTrainingOpen}
+        onClose={() => setIsTrainingOpen(false)}
+        onTrainingComplete={() => {
+          fetch('/api/metrics/accuracy')
+            .then((r) => r.json())
+            .then((d) => d?.metrics && setMetrics(d.metrics))
+            .catch(() => {});
+        }}
+      />
     </div>
   );
 }
