@@ -1,8 +1,13 @@
 @import "tailwindcss";
 
+/* ============================================================
+   KEYHOLE — PRODUCTION DESIGN SYSTEM
+   Hyper-dark OKLCH color space · Linear + Raycast + Framer
+   ============================================================ */
+
 :root {
   /* OKLCH Color Palette */
-  --background: oklch(0.02 0 0); /* #050505 */
+  --background: oklch(0.02 0 0); /* #050505 void black */
   --foreground: oklch(0.985 0 0);
   --muted-foreground: oklch(0.66 0.015 280);
 
@@ -33,7 +38,15 @@
   --syn-pass: oklch(0.72 0.17 155);
   --syn-fail: oklch(0.63 0.2 25);
   --syn-time: oklch(0.75 0.14 210);
+
+  /* Font variables */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }
+
+/* ============================================================
+   BASE RESET
+   ============================================================ */
 
 /* Force dark theme everywhere, kill white flash */
 html {
@@ -41,6 +54,8 @@ html {
   background-color: oklch(0.02 0 0);
   color: oklch(0.985 0 0);
   scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
@@ -52,7 +67,11 @@ body {
   min-height: 100vh;
 }
 
-/* Atmospheric Depth Gradients */
+/* ============================================================
+   ATMOSPHERIC BACKGROUNDS
+   ============================================================ */
+
+/* Fixed atmospheric depth gradients matching spec */
 .bg-atmospheric {
   background: 
     radial-gradient(ellipse 80% 60% at 50% -10%, oklch(0.35 0.2 295 / 0.35), transparent 60%),
@@ -60,7 +79,20 @@ body {
     oklch(0.02 0 0);
 }
 
-/* Glassmorphism Primitive */
+.bg-atmospheric-fixed {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: 
+    radial-gradient(ellipse 80% 60% at 50% -10%, oklch(0.35 0.2 295 / 0.35), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 40%, oklch(0.3 0.18 295 / 0.18), transparent 70%);
+}
+
+/* ============================================================
+   GLASSMORPHISM
+   ============================================================ */
+
 .glass {
   background: color-mix(in oklab, var(--surface) 60%, transparent);
   backdrop-filter: blur(16px) saturate(140%);
@@ -75,7 +107,10 @@ body {
   border: 1px solid var(--border);
 }
 
-/* Dark Card */
+/* ============================================================
+   CARD PRIMITIVES
+   ============================================================ */
+
 .card-dark {
   border-radius: 16px;
   background: linear-gradient(180deg, oklch(0.09 0.005 280), oklch(0.06 0.005 280));
@@ -89,7 +124,10 @@ body {
   box-shadow: 0 12px 32px -8px oklch(0.62 0.22 295 / 0.25);
 }
 
-/* Button Primitives */
+/* ============================================================
+   BUTTON PRIMITIVES
+   ============================================================ */
+
 .btn-primary {
   background: linear-gradient(180deg, oklch(0.68 0.22 295), oklch(0.55 0.22 295));
   box-shadow: inset 0 1px 0 oklch(1 0 0 / 25%), 0 10px 30px -10px oklch(0.62 0.22 295 / 0.6);
@@ -136,13 +174,17 @@ body {
   outline-offset: 2px;
 }
 
-/* Typography Ramp */
+/* ============================================================
+   TYPOGRAPHY
+   ============================================================ */
+
 .hero-title {
   font-size: clamp(2.75rem, 7vw, 6rem);
   letter-spacing: -0.045em;
   line-height: 0.95;
   background: linear-gradient(180deg, oklch(0.985 0 0) 0%, oklch(0.92 0.02 295) 55%, oklch(0.66 0.015 280) 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -153,7 +195,11 @@ body {
   color: oklch(0.985 0 0);
 }
 
-/* Live Dot Animation */
+/* ============================================================
+   KEYFRAME ANIMATIONS
+   ============================================================ */
+
+/* Live pulsing dot */
 @keyframes pulseGlow {
   0%, 100% {
     transform: scale(1);
@@ -171,7 +217,7 @@ body {
   animation: pulseGlow 2s infinite ease-in-out;
 }
 
-/* Marquee Scroll Animation */
+/* Marquee scroll */
 @keyframes marqueeScroll {
   0% { transform: translateX(0%); }
   100% { transform: translateX(-50%); }
@@ -187,7 +233,153 @@ body {
   animation-play-state: paused;
 }
 
-/* Custom Sleek Scrollbar */
+/* Floating stardust particles */
+@keyframes starFloat {
+  0% {
+    transform: translateY(0px) translateX(0px);
+    opacity: 0;
+  }
+  10% { opacity: 1; }
+  90% { opacity: 0.6; }
+  100% {
+    transform: translateY(-120vh) translateX(30px);
+    opacity: 0;
+  }
+}
+
+.star-particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: oklch(0.62 0.22 295 / 0.7);
+  animation: starFloat linear infinite;
+  will-change: transform, opacity;
+}
+
+.star-particle:nth-child(odd) {
+  background: oklch(0.85 0.01 280 / 0.4);
+}
+
+/* Meteor light streak at 215 degrees */
+@keyframes meteorStreak {
+  0% {
+    transform: translateX(-100px) translateY(-100px) rotate(215deg);
+    opacity: 0;
+  }
+  5% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% {
+    transform: translateX(200vw) translateY(200vh) rotate(215deg);
+    opacity: 0;
+  }
+}
+
+.meteor-streak {
+  position: absolute;
+  width: 120px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, oklch(0.62 0.22 295 / 0.7), transparent);
+  transform: rotate(215deg);
+  animation: meteorStreak linear infinite;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+/* Widget spring animation */
+@keyframes widgetSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.widget-enter {
+  animation: widgetSlideIn 280ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Shimmer loading effect */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    oklch(0.09 0.005 280) 25%,
+    oklch(0.14 0.008 280) 50%,
+    oklch(0.09 0.005 280) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 6px;
+}
+
+/* Typing indicator dots */
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-6px); }
+}
+
+.typing-dot:nth-child(1) { animation: typingBounce 1s infinite 0ms; }
+.typing-dot:nth-child(2) { animation: typingBounce 1s infinite 150ms; }
+.typing-dot:nth-child(3) { animation: typingBounce 1s infinite 300ms; }
+
+/* Fade in up */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+/* Rotate on hover for icon */
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Processing progress pulse */
+@keyframes progressPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.progress-pulse {
+  animation: progressPulse 1.5s ease-in-out infinite;
+}
+
+/* Neon glow for active elements */
+@keyframes neonPulse {
+  0%, 100% {
+    box-shadow: 0 0 5px oklch(0.62 0.22 295 / 0.4), 0 0 20px oklch(0.62 0.22 295 / 0.2);
+  }
+  50% {
+    box-shadow: 0 0 10px oklch(0.62 0.22 295 / 0.7), 0 0 40px oklch(0.62 0.22 295 / 0.35);
+  }
+}
+
+.neon-active {
+  animation: neonPulse 2s ease-in-out infinite;
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -206,6 +398,113 @@ body {
   background: oklch(0.35 0.08 295);
 }
 
+/* ============================================================
+   FORM ELEMENT FOCUS EFFECTS
+   ============================================================ */
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px oklch(0.62 0.22 295 / 0.5);
+}
+
+/* ============================================================
+   AUDIO WAVEFORM
+   ============================================================ */
+
+.waveform-container {
+  background: oklch(0.05 0.003 280);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* ============================================================
+   CURSOR SPOTLIGHT EFFECT
+   ============================================================ */
+
+.cursor-spotlight {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, oklch(0.62 0.22 295 / 0.06) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  transition: transform 0ms linear;
+  will-change: transform;
+}
+
+/* ============================================================
+   UTILITY CLASSES
+   ============================================================ */
+
+.text-gradient-violet {
+  background: linear-gradient(135deg, oklch(0.68 0.22 295), oklch(0.85 0.01 280));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.border-glow-violet {
+  border-color: oklch(0.62 0.22 295 / 50%);
+  box-shadow: 0 0 0 1px oklch(0.62 0.22 295 / 20%);
+}
+
+/* Pill badge glowing */
+.pill-badge-primary {
+  background: oklch(0.62 0.22 295 / 10%);
+  border: 1px solid oklch(0.62 0.22 295 / 30%);
+  color: oklch(0.62 0.22 295);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+}
+
+/* Glass nav pill */
+.nav-pill {
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  background: color-mix(in oklab, oklch(0.08 0.005 280) 70%, transparent);
+  border: 1px solid oklch(0.22 0.01 280 / 80%);
+  box-shadow: 0 4px 24px -4px oklch(0.02 0 0 / 80%);
+}
+
+/* Confidence score bar */
+.confidence-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: oklch(0.15 0.01 280);
+  overflow: hidden;
+}
+
+.confidence-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, oklch(0.55 0.22 295), oklch(0.72 0.17 155));
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============================================================
+   SPOTLIGHT CANVAS 
+   ============================================================ */
+
+#spotlight-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.65;
+}
+
+/* ============================================================
+   REDUCED MOTION PREFERENCE
+   ============================================================ */
+
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
     animation-duration: 0.01ms !important;
@@ -213,4 +512,97 @@ body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ============================================================
+   MOBILE RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: clamp(2rem, 10vw, 3.5rem);
+    letter-spacing: -0.03em;
+  }
+  
+  .widget-mobile {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    border: none;
+  }
+}
+
+/* ============================================================
+   DRAG AND DROP ZONES
+   ============================================================ */
+
+.drop-zone {
+  border: 2px dashed oklch(0.22 0.01 280);
+  border-radius: 16px;
+  transition: border-color 200ms ease, background-color 200ms ease;
+}
+
+.drop-zone.active,
+.drop-zone:hover {
+  border-color: oklch(0.62 0.22 295 / 60%);
+  background-color: oklch(0.62 0.22 295 / 5%);
+}
+
+/* ============================================================
+   TRANSCRIPT HIGHLIGHT ACTIVE WORD
+   ============================================================ */
+
+.transcript-word-active {
+  background: oklch(0.62 0.22 295 / 25%);
+  border-radius: 3px;
+  color: oklch(0.985 0 0);
+  padding: 0 2px;
+  transition: background 300ms ease;
+}
+
+/* ============================================================
+   SENTIMENT TIMELINE
+   ============================================================ */
+
+.sentiment-positive { background: oklch(0.72 0.17 155 / 80%); }
+.sentiment-neutral   { background: oklch(0.66 0.015 280 / 60%); }
+.sentiment-negative  { background: oklch(0.63 0.2 25 / 80%); }
+
+/* ============================================================
+   PROCESSING STAGE INDICATOR
+   ============================================================ */
+
+.stage-complete { color: oklch(0.72 0.17 155); }
+.stage-active   { color: oklch(0.62 0.22 295); animation: progressPulse 1.5s ease-in-out infinite; }
+.stage-pending  { color: oklch(0.4 0.01 280); }
+
+/* ============================================================
+   COPY TO CLIPBOARD FLASH
+   ============================================================ */
+
+@keyframes copyFlash {
+  0%   { background: oklch(0.62 0.22 295 / 25%); }
+  100% { background: transparent; }
+}
+
+.copy-flash {
+  animation: copyFlash 600ms ease forwards;
+}
+
+/* ============================================================
+   INCIDENT TRAINING BADGE
+   ============================================================ */
+
+.incident-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  background: oklch(0.78 0.15 85 / 15%);
+  border: 1px solid oklch(0.78 0.15 85 / 40%);
+  color: oklch(0.78 0.15 85);
 }

@@ -75,7 +75,7 @@ export const TEMP_UPLOAD_DIR = getSafeTempUploadDir();
 export function ensureTempUploadDir(): string {
   const targetDir = getSafeTempUploadDir();
   try {
-    if (!fs.existsSync(targetDir)) {
+    if (!fs.existsSync(/*turbopackIgnore: true*/ targetDir)) {
       fs.mkdirSync(targetDir, { recursive: true });
     }
   } catch (err) {
@@ -359,8 +359,8 @@ export async function cleanupSessionData(
   // 2. Delete all uploaded files associated with this session
   let deletedFiles = 0;
   try {
-    if (fs.existsSync(TEMP_UPLOAD_DIR)) {
-      const files = fs.readdirSync(TEMP_UPLOAD_DIR);
+    if (fs.existsSync(/*turbopackIgnore: true*/ TEMP_UPLOAD_DIR)) {
+      const files = fs.readdirSync(/*turbopackIgnore: true*/ TEMP_UPLOAD_DIR);
       const prefix = `${sessionId}_`;
       for (const f of files) {
         if (f.startsWith(prefix)) {
@@ -394,8 +394,8 @@ export function cleanOrphanedTempData(): {
   const twoHoursAgo = Date.now() - 2 * 60 * 60 * 1000;
 
   try {
-    if (fs.existsSync(TEMP_UPLOAD_DIR)) {
-      const files = fs.readdirSync(TEMP_UPLOAD_DIR);
+    if (fs.existsSync(/*turbopackIgnore: true*/ TEMP_UPLOAD_DIR)) {
+      const files = fs.readdirSync(/*turbopackIgnore: true*/ TEMP_UPLOAD_DIR);
       for (const f of files) {
         const filePath = path.join(TEMP_UPLOAD_DIR, f);
         try {

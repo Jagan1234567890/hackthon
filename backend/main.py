@@ -56,7 +56,7 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 MANIFEST_DIR = Path(__file__).parent / "manifests"
 MANIFEST_DIR.mkdir(exist_ok=True)
 
-# Serve the frontend
+# Serve the frontend and uploaded files
 FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
 if FRONTEND_DIR.exists():
     app.mount("/app", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
@@ -64,6 +64,17 @@ if FRONTEND_DIR.exists():
     @app.get("/", include_in_schema=False)
     def root():
         return RedirectResponse(url="/app/")
+
+app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
+
+
+def _make_safe_stored_filename(file_hash: str, original_filename: str | None, prefix: str = "") -> str:
+    """Create a persistent, recognizable filename preserving content hash and original name."""
+    ext = Path(original_filename or "upload.bin").suffix or ".bin"
+    stem = Path(original_filename or "upload").stem
+    safe_stem = "".join(c for c in stem if c.isalnum() or c in "._- ")[:40] or "upload"
+    prefix_str = f"{prefix}_" if prefix else ""
+    return f"{prefix_str}{file_hash[:16]}_{safe_stem}{ext}"
 
 # ---------------------------------------------------------------------------
 # Validation constants
@@ -217,9 +228,22 @@ async def sign_file(
     # --- Server-side magic-byte MIME check ---
     _validate_magic(save_path)
 
+    persisted = False
     try:
         # Compute hash
         file_hash = crypto_utils.sha256_file(save_path)
+
+        stored_filename = _make_safe_stored_filename(file_hash, file.filename)
+        permanent_path = UPLOAD_DIR / stored_filename
+
+        if permanent_path.exists() and permanent_path != save_path:
+            save_path.unlink(missing_ok=True)
+            save_path = permanent_path
+        elif save_path != permanent_path:
+            save_path.rename(permanent_path)
+            save_path = permanent_path
+        persisted = True
+        file_url = f"/uploads/{stored_filename}"
 
         # --- Check if already signed ---
         existing = database.get_manifest_by_hash(file_hash)
@@ -242,9 +266,6 @@ async def sign_file(
 
             chain = database.get_custody_chain(existing["id"])
 
-            # Clean up temp file before the early return
-            save_path.unlink(missing_ok=True)
-
             return {
                 "status": "already_signed",
                 "message": (
@@ -253,6 +274,10 @@ async def sign_file(
                 ),
                 "manifest": existing,
                 "custody_chain": chain,
+                "saved_file": {
+                    "filename": stored_filename,
+                    "url": file_url,
+                },
             }
 
         # --- Build manifest ---
@@ -279,7 +304,11 @@ async def sign_file(
             device_id=device_id,
             signature=signature,
             public_key=crypto_utils.get_public_key_hex(),
-            metadata={"note": note},
+            metadata={
+                "note": note,
+                "stored_filename": stored_filename,
+                "file_url": file_url,
+            },
         )
 
         # Add genesis custody event
@@ -295,18 +324,28 @@ async def sign_file(
 
         # Write manifest JSON to disk
         manifest_path = MANIFEST_DIR / f"{file_hash[:16]}.json"
-        manifest_data = {**manifest, "signature": signature}
+        manifest_data = {
+            **manifest,
+            "signature": signature,
+            "stored_filename": stored_filename,
+            "file_url": file_url,
+        }
         manifest_path.write_text(json.dumps(manifest_data, indent=2))
 
         return {
             "status": "signed",
-            "message": "File signed successfully. Keep your manifest to verify later.",
+            "message": "File signed successfully and saved to disk. Keep your manifest to verify later.",
             "manifest": manifest_data,
             "manifest_id": manifest_id,
+            "saved_file": {
+                "filename": stored_filename,
+                "url": file_url,
+            },
         }
 
     finally:
-        save_path.unlink(missing_ok=True)
+        if not persisted and save_path.exists():
+            save_path.unlink(missing_ok=True)
 
 
 # ---------------------------------------------------------------------------
@@ -327,9 +366,36 @@ async def verify_file(file: UploadFile = File(...)):
     await _save_and_validate_size(file, tmp_path)
     _validate_magic(tmp_path)
 
+    persisted = False
     try:
         file_hash = crypto_utils.sha256_file(tmp_path)
         manifest_row = database.get_manifest_by_hash(file_hash)
+
+        # Preserve uploaded file on disk
+        stored_filename = _make_safe_stored_filename(file_hash, file.filename)
+        permanent_path = UPLOAD_DIR / stored_filename
+
+        if permanent_path.exists() and permanent_path != tmp_path:
+            tmp_path.unlink(missing_ok=True)
+            tmp_path = permanent_path
+            saved_filename = permanent_path.name
+        elif manifest_row is not None:
+            tmp_path.rename(permanent_path)
+            tmp_path = permanent_path
+            saved_filename = permanent_path.name
+        else:
+            verified_name = _make_safe_stored_filename(file_hash, file.filename, prefix="verified")
+            verified_path = UPLOAD_DIR / verified_name
+            if verified_path.exists() and verified_path != tmp_path:
+                tmp_path.unlink(missing_ok=True)
+                tmp_path = verified_path
+            else:
+                tmp_path.rename(verified_path)
+                tmp_path = verified_path
+            saved_filename = verified_name
+
+        persisted = True
+        file_url = f"/uploads/{saved_filename}"
 
         if manifest_row is None:
             # No manifest — run AI detection fallback
@@ -354,6 +420,10 @@ async def verify_file(file: UploadFile = File(...)):
                     "Running AI-based detection as a best-effort fallback."
                 ),
                 "detection": detection,
+                "saved_file": {
+                    "filename": saved_filename,
+                    "url": file_url,
+                },
             }
 
         # Manifest found — verify signature
@@ -414,10 +484,15 @@ async def verify_file(file: UploadFile = File(...)):
             "manifest": manifest_row,
             "custody_chain": chain,
             "signature_valid": sig_valid,
+            "saved_file": {
+                "filename": saved_filename,
+                "url": file_url,
+            },
         }
 
     finally:
-        tmp_path.unlink(missing_ok=True)
+        if not persisted and tmp_path.exists():
+            tmp_path.unlink(missing_ok=True)
 
 
 # ---------------------------------------------------------------------------
@@ -506,8 +581,20 @@ async def batch_verify(files: List[UploadFile] = File(...)):
                 results.append(result)
                 continue
 
+            persisted = False
             file_hash = crypto_utils.sha256_file(tmp_path)
             result["file_hash"] = file_hash
+
+            stored_batch_name = _make_safe_stored_filename(file_hash, file.filename, prefix="batch")
+            batch_perm = UPLOAD_DIR / stored_batch_name
+            if batch_perm.exists() and batch_perm != tmp_path:
+                tmp_path.unlink(missing_ok=True)
+                tmp_path = batch_perm
+            else:
+                tmp_path.rename(batch_perm)
+                tmp_path = batch_perm
+            persisted = True
+            result["saved_file"] = {"filename": stored_batch_name, "url": f"/uploads/{stored_batch_name}"}
 
             manifest_row = database.get_manifest_by_hash(file_hash)
 
@@ -596,7 +683,7 @@ async def batch_verify(files: List[UploadFile] = File(...)):
             result["status"] = "error"
             result["error"] = str(exc)
         finally:
-            if tmp_path:
+            if tmp_path and not persisted and tmp_path.exists():
                 tmp_path.unlink(missing_ok=True)
 
         results.append(result)

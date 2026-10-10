@@ -1,162 +1,236 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
-export const SpotlightCanvas: React.FC = () => {
+/**
+ * CursorSpotlightCanvas
+ * 
+ * Tracks mouse movement to render:
+ * 1. A radial violet glow following the cursor
+ * 2. Ambient floating stardust particles
+ * 3. Diagonal meteor light streaks at ~215 degrees
+ */
+
+interface Particle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  r: number;
+  alpha: number;
+  life: number;
+  maxLife: number;
+  color: string;
+}
+
+interface Meteor {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  length: number;
+  alpha: number;
+  life: number;
+  maxLife: number;
+}
+
+export function SpotlightCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mouseRef = useRef({ x: -500, y: -500 });
+  const particlesRef = useRef<Particle[]>([]);
+  const meteorsRef = useRef<Meteor[]>([]);
+  const animRef = useRef<number>(0);
+  const [mounted, setMounted] = useState(false);
+
+  const STAR_COLORS = [
+    'oklch(0.62 0.22 295)',
+    'oklch(0.72 0.17 155)',
+    'oklch(0.85 0.01 280)',
+    'oklch(0.75 0.14 210)',
+  ];
 
   useEffect(() => {
-    // Respect prefers-reduced-motion
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      return;
-    }
+    setMounted(true);
+  }, []);
 
+  useEffect(() => {
+    if (!mounted) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let animationFrameId: number;
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
+    // Resize canvas to viewport
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener('resize', resize);
 
-    const handleResize = () => {
-      if (!canvas) return;
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
+    // Mouse tracking
+    const onMove = (e: MouseEvent) => {
+      mouseRef.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener('mousemove', onMove);
+
+    // Spawn initial particles
+    const spawnParticle = (): Particle => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: -Math.random() * 0.6 - 0.2,
+      r: Math.random() * 1.5 + 0.5,
+      alpha: 0,
+      life: 0,
+      maxLife: Math.random() * 400 + 200,
+      color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)],
+    });
+
+    const spawnMeteor = (): Meteor => {
+      const angle = 215 * (Math.PI / 180);
+      const speed = Math.random() * 4 + 3;
+      return {
+        x: Math.random() * canvas.width * 1.5 - canvas.width * 0.25,
+        y: Math.random() * canvas.height * 0.5 - canvas.height * 0.25,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        length: Math.random() * 120 + 60,
+        alpha: 0,
+        life: 0,
+        maxLife: Math.random() * 120 + 80,
+      };
     };
 
-    window.addEventListener('resize', handleResize);
-
-    // Mouse coordinates with smooth lerp
-    let mouseX = width / 2;
-    let mouseY = height / 3;
-    let targetMouseX = mouseX;
-    let targetMouseY = mouseY;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      targetMouseX = e.clientX;
-      targetMouseY = e.clientY;
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-
-    // Stardust particles
-    const particleCount = Math.min(45, Math.floor(width / 35));
-    const particles = Array.from({ length: particleCount }, () => ({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      size: Math.random() * 1.5 + 0.5,
-      speedX: (Math.random() - 0.5) * 0.2,
-      speedY: (Math.random() - 0.5) * 0.2,
-      alpha: Math.random() * 0.5 + 0.1,
-    }));
-
-    // Diagonal meteors (215 degrees angle)
-    const meteorAngle = (215 * Math.PI) / 180;
-    const meteorSpeed = 3.5;
-    const dx = Math.cos(meteorAngle) * meteorSpeed;
-    const dy = Math.sin(meteorAngle) * meteorSpeed;
-
-    interface Meteor {
-      x: number;
-      y: number;
-      len: number;
-      alpha: number;
-      life: number;
-      maxLife: number;
+    // Initialize particle pool
+    for (let i = 0; i < 80; i++) {
+      const p = spawnParticle();
+      p.life = Math.random() * p.maxLife; // stagger start
+      particlesRef.current.push(p);
     }
 
-    let meteors: Meteor[] = [];
+    let frameCount = 0;
 
-    const spawnMeteor = () => {
-      if (Math.random() < 0.02 && meteors.length < 3) {
-        meteors.push({
-          x: Math.random() * width + 200,
-          y: Math.random() * (height * 0.4),
-          len: Math.random() * 80 + 40,
-          alpha: 0.6,
-          life: 0,
-          maxLife: Math.random() * 60 + 40,
-        });
-      }
-    };
+    const draw = () => {
+      frameCount++;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const render = () => {
-      ctx.clearRect(0, 0, width, height);
+      const mx = mouseRef.current.x;
+      const my = mouseRef.current.y;
 
-      // Lerp mouse
-      mouseX += (targetMouseX - mouseX) * 0.08;
-      mouseY += (targetMouseY - mouseY) * 0.08;
-
-      // Cursor spotlight radial violet glow
-      const spotlight = ctx.createRadialGradient(mouseX, mouseY, 0, mouseX, mouseY, 500);
-      spotlight.addColorStop(0, 'rgba(168, 85, 247, 0.08)');
-      spotlight.addColorStop(0.5, 'rgba(168, 85, 247, 0.02)');
-      spotlight.addColorStop(1, 'transparent');
-      ctx.fillStyle = spotlight;
-      ctx.fillRect(0, 0, width, height);
-
-      // Render Stardust particles
-      particles.forEach((p) => {
-        p.x += p.speedX;
-        p.y += p.speedY;
-
-        if (p.x < 0) p.x = width;
-        if (p.x > width) p.x = 0;
-        if (p.y < 0) p.y = height;
-        if (p.y > height) p.y = 0;
-
-        ctx.fillStyle = `rgba(200, 180, 255, ${p.alpha})`;
+      // 1. Draw cursor spotlight glow
+      if (mx > -400) {
+        const grd = ctx.createRadialGradient(mx, my, 0, mx, my, 200);
+        grd.addColorStop(0, 'oklch(0.62 0.22 295 / 0.07)');
+        grd.addColorStop(1, 'transparent');
+        ctx.fillStyle = grd as unknown as string;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.arc(mx, my, 200, 0, Math.PI * 2);
         ctx.fill();
-      });
+      }
 
-      // Render meteors
-      spawnMeteor();
-      meteors = meteors.filter((m) => {
-        m.x += dx;
-        m.y += dy;
-        m.life++;
+      // 2. Update and draw stardust particles
+      particlesRef.current.forEach((p, idx) => {
+        p.life++;
+        p.x += p.vx;
+        p.y += p.vy;
 
-        const currentAlpha = m.alpha * (1 - m.life / m.maxLife);
-        if (currentAlpha <= 0) return false;
+        const progress = p.life / p.maxLife;
+        if (progress < 0.1) {
+          p.alpha = progress * 10;
+        } else if (progress > 0.85) {
+          p.alpha = (1 - progress) * (1 / 0.15);
+        } else {
+          p.alpha = 1;
+        }
 
-        const tailX = m.x - Math.cos(meteorAngle) * m.len;
-        const tailY = m.y - Math.sin(meteorAngle) * m.len;
+        if (p.life >= p.maxLife || p.y < -10) {
+          particlesRef.current[idx] = { ...spawnParticle(), life: 0, alpha: 0 };
+          return;
+        }
 
-        const grad = ctx.createLinearGradient(m.x, m.y, tailX, tailY);
-        grad.addColorStop(0, `rgba(168, 85, 247, ${currentAlpha})`);
-        grad.addColorStop(1, 'transparent');
-
-        ctx.strokeStyle = grad;
-        ctx.lineWidth = 1.2;
+        ctx.save();
+        ctx.globalAlpha = p.alpha * 0.55;
         ctx.beginPath();
-        ctx.moveTo(m.x, m.y);
-        ctx.lineTo(tailX, tailY);
-        ctx.stroke();
-
-        return m.life < m.maxLife;
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = '#A855F7'; // electric violet
+        ctx.fill();
+        ctx.restore();
       });
 
-      animationFrameId = requestAnimationFrame(render);
+      // 3. Spawn meteors periodically
+      if (frameCount % 240 === 0 && meteorsRef.current.length < 5) {
+        meteorsRef.current.push(spawnMeteor());
+      }
+
+      // 4. Update and draw meteors
+      meteorsRef.current = meteorsRef.current.filter((m) => {
+        m.life++;
+        m.x += m.vx;
+        m.y += m.vy;
+
+        const progress = m.life / m.maxLife;
+        if (progress < 0.15) {
+          m.alpha = progress / 0.15;
+        } else if (progress > 0.7) {
+          m.alpha = (1 - progress) / 0.3;
+        } else {
+          m.alpha = 1;
+        }
+
+        if (m.life >= m.maxLife) return false;
+
+        // Compute tail
+        const angle = 215 * (Math.PI / 180);
+        const tailX = m.x - Math.cos(angle) * m.length;
+        const tailY = m.y - Math.sin(angle) * m.length;
+
+        const grd = ctx.createLinearGradient(tailX, tailY, m.x, m.y);
+        grd.addColorStop(0, `rgba(168, 85, 247, 0)`);
+        grd.addColorStop(0.4, `rgba(168, 85, 247, ${m.alpha * 0.4})`);
+        grd.addColorStop(1, `rgba(255, 255, 255, ${m.alpha * 0.7})`);
+
+        ctx.save();
+        ctx.globalAlpha = m.alpha * 0.6;
+        ctx.beginPath();
+        ctx.moveTo(tailX, tailY);
+        ctx.lineTo(m.x, m.y);
+        ctx.strokeStyle = grd as unknown as string;
+        ctx.lineWidth = 1.5;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+        ctx.restore();
+
+        return true;
+      });
+
+      animRef.current = requestAnimationFrame(draw);
     };
 
-    render();
+    animRef.current = requestAnimationFrame(draw);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('mousemove', handleMouseMove);
-      cancelAnimationFrame(animationFrameId);
+      cancelAnimationFrame(animRef.current);
+      window.removeEventListener('resize', resize);
+      window.removeEventListener('mousemove', onMove);
     };
-  }, []);
+  }, [mounted]);
+
+  if (!mounted) return null;
 
   return (
     <canvas
       ref={canvasRef}
-      className="pointer-events-none fixed inset-0 z-0 h-full w-full hidden md:block"
-      style={{ willChange: 'transform' }}
+      id="spotlight-canvas"
+      aria-hidden="true"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        zIndex: 0,
+      }}
     />
   );
-};
+}

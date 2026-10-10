@@ -19,6 +19,8 @@ import {
   User as UserIcon,
   Moon,
   Sun,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { useAppStore, ChatMessageUI } from '@/lib/store/useAppStore';
 
@@ -44,6 +46,7 @@ export function SiteAssistantWidget() {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -332,7 +335,32 @@ export function SiteAssistantWidget() {
                   )}
 
                   <div className="mt-1.5 flex items-center justify-between text-[10px] text-[oklch(0.66_0.015_280)]">
-                    <span>{m.timestamp}</span>
+                    <div className="flex items-center gap-2">
+                      <span>{m.timestamp}</span>
+                      {m.sender === 'bot' && (
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(m.content);
+                            setCopiedMsgId(m.id);
+                            setTimeout(() => setCopiedMsgId(null), 2000);
+                          }}
+                          className="hover:text-white transition-colors flex items-center gap-0.5"
+                          title="Copy message to clipboard"
+                        >
+                          {copiedMsgId === m.id ? (
+                            <>
+                              <Check className="w-2.5 h-2.5 text-emerald-400" />
+                              <span className="text-emerald-400">Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-2.5 h-2.5" />
+                              <span>Copy</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
                     {m.confidence !== undefined && (
                       <span className="font-mono">
                         {(m.confidence * 100).toFixed(0)}% confidence

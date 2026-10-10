@@ -15,11 +15,17 @@ if errorlevel 1 (
 
 REM Install dependencies if needed
 echo [1/3] Checking dependencies...
-pip install -q fastapi uvicorn pynacl python-multipart aiofiles pillow transformers torch torchvision
+if exist "backend\.venv\Scripts\python.exe" (
+    echo Using virtual environment at backend\.venv ...
+    set "PY_CMD=%~dp0backend\.venv\Scripts\python.exe"
+) else (
+    pip install -q fastapi uvicorn pynacl python-multipart aiofiles pillow transformers torch torchvision
+    set "PY_CMD=python"
+)
 
 REM Start the backend
 echo [2/3] Starting backend server on http://localhost:8000 ...
-start "TrustMark Backend" cmd /k "cd backend && python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+start "TrustMark Backend" cmd /k "cd backend && \"%PY_CMD%\" -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
 
 REM Wait a moment for server to start
 timeout /t 3 /nobreak >nul
